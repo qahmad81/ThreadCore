@@ -92,7 +92,7 @@
 - `app/Models/ProviderModel.php`
   Models available through each provider.
 - `app/Models/FamilyAgent.php`
-  Family-agent configuration and defaults.
+  Family-agent configuration, defaults, and compaction provider/model/prompt settings.
 - `app/Models/Thread.php`
   Thread metadata and token counters.
 - `app/Models/ThreadMessage.php`
@@ -107,6 +107,8 @@
   Provider clients and normalized AI responses.
 - `app/Services/Gateway/`
   Provider resolution, history building, command parsing, compaction, limits, and token estimation.
+- `app/Services/Gateway/ThreadMarkdownExporter.php`
+  Shared Markdown rendering for admin and customer thread exports.
 - `database/seeders/DatabaseSeeder.php`
   Seeds local admin user, demo customer, plan/subscription, providers, provider models, the default family agent, and the initial landing page.
 
