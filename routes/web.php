@@ -13,6 +13,7 @@ use App\Http\Controllers\Customer\ApiKeyController;
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\Customer\DocsController;
 use App\Http\Controllers\Customer\ProfileController;
+use App\Http\Controllers\Customer\ThreadController as CustomerThreadController;
 use App\Http\Controllers\Customer\UsageController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\SitePageController as PublicSitePageController;
@@ -37,6 +38,7 @@ Route::middleware(['auth', 'admin'])->prefix(config('threadcore.admin.path'))->n
     Route::resource('family-agents', FamilyAgentController::class)->except(['show', 'destroy']);
     Route::get('/customers', [CustomerAccountController::class, 'index'])->name('customers.index');
     Route::get('/api-keys', [AdminApiKeyController::class, 'index'])->name('api-keys.index');
+    Route::get('/threads/{thread:public_id}', [ThreadController::class, 'show'])->name('threads.show');
     Route::get('/threads', [ThreadController::class, 'index'])->name('threads.index');
     Route::get('/usage', AdminUsageController::class)->name('usage.index');
 });
@@ -44,6 +46,8 @@ Route::middleware(['auth', 'admin'])->prefix(config('threadcore.admin.path'))->n
 Route::middleware('auth')->prefix('customer')->name('customer.')->group(function () {
     Route::redirect('/', '/customer/dashboard')->name('home');
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/threads/{publicId}', [CustomerThreadController::class, 'show'])->name('threads.show');
+    Route::get('/threads', [CustomerThreadController::class, 'index'])->name('threads.index');
     Route::get('/api-keys', [ApiKeyController::class, 'index'])->name('api-keys.index');
     Route::post('/api-keys', [ApiKeyController::class, 'store'])->name('api-keys.store');
     Route::delete('/api-keys/{apiKey}', [ApiKeyController::class, 'destroy'])->name('api-keys.destroy');
