@@ -83,6 +83,8 @@ class GatewayThreadController extends Controller
 
     private function handleMessage(Request $request, Thread $thread, array $data): JsonResponse
     {
+        set_time_limit(config('threadcore.gateway.timeout_seconds', 1200));
+
         $account = $request->attributes->get('customer_account');
         $apiKey = $request->attributes->get('api_key');
         $family = $thread->familyAgent;

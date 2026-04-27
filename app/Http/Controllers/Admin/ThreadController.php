@@ -14,4 +14,20 @@ class ThreadController extends Controller
             'threads' => Thread::query()->with(['customerAccount', 'familyAgent', 'provider', 'providerModel'])->latest()->limit(100)->get(),
         ]);
     }
+
+    public function show(Thread $thread): View
+    {
+        $thread->load([
+            'customerAccount',
+            'apiKey',
+            'familyAgent',
+            'provider',
+            'providerModel',
+            'messages' => fn ($query) => $query->orderBy('created_at'),
+        ]);
+
+        return view('admin.threads.show', [
+            'thread' => $thread,
+        ]);
+    }
 }

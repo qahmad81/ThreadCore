@@ -25,4 +25,8 @@ return [
         'email' => env('THREADCORE_DEMO_CUSTOMER_EMAIL', 'customer@threadcore.local'),
         'password' => env('THREADCORE_DEMO_CUSTOMER_PASSWORD', 'password'),
     ],
+
+    'gateway' => [
+        'timeout_seconds' => (int) env('THREADCORE_GATEWAY_TIMEOUT_SECONDS', 1200),
+    ],
 ];

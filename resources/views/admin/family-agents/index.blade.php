@@ -8,7 +8,13 @@
                 <tbody>
                     @foreach ($families as $family)
                         <tr>
-                            <td><strong>{{ $family->name }}</strong><div class="muted">{{ $family->number }}</div></td>
+                            <td>
+                                <strong>{{ $family->name }}</strong>
+                                <div class="muted">{{ $family->number }}</div>
+                                @if ($family->description)
+                                    <div class="muted">{{ $family->description }}</div>
+                                @endif
+                            </td>
                             <td>{{ $family->defaultProvider?->name }} / {{ $family->defaultProviderModel?->model_key }}</td>
                             <td>{{ $family->max_context_tokens }} tokens</td>
                             <td><a class="button" href="{{ route('admin.family-agents.edit', $family) }}">Edit</a></td>

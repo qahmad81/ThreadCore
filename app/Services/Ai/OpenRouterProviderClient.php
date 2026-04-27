@@ -12,6 +12,7 @@ class OpenRouterProviderClient implements ProviderClient
     {
         $response = Http::withToken((string) env($provider->api_key_env))
             ->acceptJson()
+            ->timeout(config('threadcore.gateway.timeout_seconds', 1200))
             ->post(rtrim((string) $provider->base_url, '/').'/chat/completions', [
                 'model' => $model->model_key,
                 'messages' => $messages,

@@ -14,6 +14,7 @@ class FamilyAgent extends Model
     protected $fillable = [
         'number',
         'name',
+        'description',
         'system_prompt',
         'default_provider_id',
         'default_provider_model_id',

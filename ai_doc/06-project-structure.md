@@ -75,6 +75,8 @@
   Family-agent CRUD.
 - `app/Http/Controllers/Admin/ApiKeyController.php`
   Admin read-only API key visibility.
+- `app/Http/Controllers/Admin/ThreadController.php`
+  Admin thread list and conversation detail view.
 - `app/Http/Controllers/Admin/SitePageController.php`
   CMS page CRUD.
 - `app/Http/Controllers/Api/GatewayThreadController.php`

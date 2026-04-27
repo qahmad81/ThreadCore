@@ -11,6 +11,7 @@ class OllamaProviderClient implements ProviderClient
     public function chat(Provider $provider, ProviderModel $model, array $messages, array $options = []): AiResponse
     {
         $response = Http::acceptJson()
+            ->timeout(config('threadcore.gateway.timeout_seconds', 1200))
             ->post(rtrim((string) $provider->base_url, '/').'/api/chat', [
                 'model' => $model->model_key,
                 'messages' => $messages,

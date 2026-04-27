@@ -8,6 +8,8 @@
                 <div><label>Number</label><input name="number" type="text" value="{{ old('number', $family->number) }}" required></div>
                 <div><label>Name</label><input name="name" type="text" value="{{ old('name', $family->name) }}" required></div>
             </div>
+            <label>Description</label>
+            <textarea name="description" placeholder="Optional short description for this family agent">{{ old('description', $family->description) }}</textarea>
             <label>System prompt</label>
             <textarea name="system_prompt">{{ old('system_prompt', $family->system_prompt) }}</textarea>
             <div class="grid two">

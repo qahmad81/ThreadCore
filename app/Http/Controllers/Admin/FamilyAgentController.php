@@ -57,6 +57,7 @@ class FamilyAgentController extends Controller
         $data = $request->validate([
             'number' => ['required', 'string', 'max:80'],
             'name' => ['required', 'string', 'max:120'],
+            'description' => ['nullable', 'string'],
             'system_prompt' => ['nullable', 'string'],
             'default_provider_id' => ['nullable', 'exists:providers,id'],
             'default_provider_model_id' => ['nullable', 'exists:provider_models,id'],
