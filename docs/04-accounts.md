@@ -18,12 +18,16 @@ ThreadCore includes customer-facing account management as part of the microsaas 
 
 ## Current Implementation
 - A local admin user is seeded by `DatabaseSeeder`.
+- A demo customer account and internal Starter plan/subscription are seeded by `DatabaseSeeder`.
 - Basic session login/logout is implemented.
 - The admin URL prefix is configurable through `THREADCORE_ADMIN_PATH` and currently remains `admin`.
 - Admin access requires both login and the `is_admin` flag.
-- The first authenticated admin screen is `/admin/providers`, which verifies seeded provider and model records.
+- Admin CRUD exists for CMS pages, providers, provider models, and family agents.
 - The public `/` route renders a simple CMS-backed landing page from the `site_pages` table.
-- Customer accounts, subscriptions, API keys, and billing records are still planned and not implemented yet.
+- Customer dashboard, API key management, usage, and gateway docs exist under `/customer`.
+- API keys are stored as hashes and the plain token is shown only once after creation.
+- Internal billing v1 tracks plan limits and subscription usage counters. Stripe is not integrated.
+- Gateway requests authenticate with `Authorization: Bearer tc_live_xxx`.
 
 ## Notes
 - Account and billing records should be part of the application, not part of the docs.

@@ -1,16 +1,7 @@
 <x-layouts.app title="Providers - ThreadCore">
     <main class="shell">
-        <header class="topbar">
-            <div class="brand">
-                <strong>ThreadCore Admin</strong>
-                <span>Provider bootstrap verification</span>
-            </div>
-
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="button" type="submit">Sign out</button>
-            </form>
-        </header>
+        @include('admin._chrome', ['title' => 'Providers'])
+        <p><a class="button primary" href="{{ route('admin.providers.create') }}">New provider</a></p>
 
         <section class="grid">
             @forelse ($providers as $provider)
@@ -49,6 +40,14 @@
                             @endforeach
                         </tbody>
                     </table>
+                    <div class="actions" style="margin-top: 14px;">
+                        <a class="button" href="{{ route('admin.providers.edit', $provider) }}">Edit</a>
+                        <form method="POST" action="{{ route('admin.providers.destroy', $provider) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button class="button danger" type="submit">Delete</button>
+                        </form>
+                    </div>
                 </article>
             @empty
                 <section class="panel panel-pad">

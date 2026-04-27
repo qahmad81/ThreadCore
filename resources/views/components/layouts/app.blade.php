@@ -49,7 +49,9 @@
             text-decoration: none;
         }
         .button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .button.danger { color: #b42318; }
         .grid { display: grid; gap: 16px; }
+        .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .provider { padding: 18px; }
         .provider-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
         .provider h2 { font-size: 18px; margin: 0 0 4px; }
@@ -68,6 +70,37 @@
             padding: 0 12px;
             width: 100%;
         }
+        input[type="text"], input[type="url"], input[type="number"], textarea, select {
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            font: inherit;
+            min-height: 42px;
+            padding: 8px 12px;
+            width: 100%;
+        }
+        textarea { min-height: 110px; resize: vertical; }
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 18px 0 0;
+        }
+        .nav a {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 13px;
+            padding: 7px 11px;
+            text-decoration: none;
+        }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .alert { border-radius: 8px; margin-bottom: 16px; padding: 12px 14px; }
+        .alert.ok { background: #f0fdf4; color: #166534; }
+        .alert.error { background: #fef2f2; color: #b42318; }
+        .stat { padding: 18px; }
+        .stat strong { display: block; font-size: 28px; }
+        code, pre { font-family: "Cascadia Mono", Consolas, monospace; }
+        pre { background: #101828; border-radius: 8px; color: #f8fafc; overflow: auto; padding: 16px; }
         .error { color: #b42318; font-size: 14px; margin-top: 10px; }
         .landing { min-height: 100vh; }
         .landing-nav {
@@ -135,6 +168,7 @@
         @media (max-width: 760px) {
             .landing-hero { padding-top: 42px; }
             .landing-band { grid-template-columns: 1fr; }
+            .two { grid-template-columns: 1fr; }
         }
     </style>
 </head>

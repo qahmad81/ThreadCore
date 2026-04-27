@@ -12,11 +12,12 @@
 
 ## Message Flow
 1. A client opens a new thread or posts to an existing thread.
-2. The gateway resolves the family, provider, model, and any optional inner provider.
-3. The system appends the standard request data and relevant conversation history.
-4. Token usage is calculated against the family capacity.
-5. If needed, the thread is compacted and marked so compressed items are not resent.
-6. The model response is returned with token metadata.
+2. API key middleware resolves the customer account and active access key.
+3. The gateway resolves the family, provider, model, and any optional inner provider.
+4. The system appends the standard request data and relevant conversation history.
+5. Token usage is estimated and checked against the internal subscription limits.
+6. If needed, the thread is compacted and marked so compressed items are not resent.
+7. The model response is returned with token metadata and the request is logged.
 
 ## Command Semantics
 - `/dayend` triggers compaction even before the hard limit is reached.
@@ -28,6 +29,7 @@
 - OpenRouter is the primary starting point for cloud AI.
 - Local providers such as Ollama should remain supported.
 - Additional providers are introduced through database records, not hardcoded routing.
+- Provider adapters normalize provider responses into content, token usage, finish reason, and raw metadata.
 
 ## Design Direction
 - Keep the architecture fork-friendly.

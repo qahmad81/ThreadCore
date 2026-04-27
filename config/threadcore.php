@@ -20,4 +20,9 @@ return [
         'email' => env('THREADCORE_ADMIN_EMAIL', 'admin@threadcore.local'),
         'password' => env('THREADCORE_ADMIN_PASSWORD'),
     ],
+
+    'demo_customer' => [
+        'email' => env('THREADCORE_DEMO_CUSTOMER_EMAIL', 'customer@threadcore.local'),
+        'password' => env('THREADCORE_DEMO_CUSTOMER_PASSWORD', 'password'),
+    ],
 ];

@@ -18,6 +18,7 @@ class ThreadMessage extends Model
         'output_tokens',
         'is_compacted',
         'is_memory',
+        'is_forgotten',
         'command',
         'metadata',
     ];
@@ -29,6 +30,7 @@ class ThreadMessage extends Model
             'output_tokens' => 'integer',
             'is_compacted' => 'boolean',
             'is_memory' => 'boolean',
+            'is_forgotten' => 'boolean',
             'metadata' => 'array',
         ];
     }

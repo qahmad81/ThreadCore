@@ -68,7 +68,19 @@
 - `app/Http/Controllers/Auth/SessionController.php`
   Basic local session login/logout.
 - `app/Http/Controllers/Admin/ProviderController.php`
-  Authenticated provider verification screen.
+  Provider CRUD.
+- `app/Http/Controllers/Admin/ProviderModelController.php`
+  Provider model CRUD.
+- `app/Http/Controllers/Admin/FamilyAgentController.php`
+  Family-agent CRUD.
+- `app/Http/Controllers/Admin/ApiKeyController.php`
+  Admin read-only API key visibility.
+- `app/Http/Controllers/Admin/SitePageController.php`
+  CMS page CRUD.
+- `app/Http/Controllers/Api/GatewayThreadController.php`
+  Gateway endpoints for creating threads and posting messages.
+- `app/Http/Controllers/Customer/`
+  Customer dashboard, API keys, usage, and docs.
 - `app/Http/Controllers/LandingPageController.php`
   Public landing page renderer backed by `site_pages`.
 - `app/Models/Provider.php`
@@ -83,8 +95,16 @@
   Thread messages, command markers, and compaction flags.
 - `app/Models/SitePage.php`
   CMS page records used for the public landing page and future site pages.
+- `app/Models/CustomerAccount.php`, `Plan.php`, `Subscription.php`, `ApiKey.php`
+  Internal billing, customer access, and API key records.
+- `app/Models/GatewayRequestLog.php`
+  Gateway request and provider response metadata.
+- `app/Services/Ai/`
+  Provider clients and normalized AI responses.
+- `app/Services/Gateway/`
+  Provider resolution, history building, command parsing, compaction, limits, and token estimation.
 - `database/seeders/DatabaseSeeder.php`
-  Seeds local admin user, providers, provider models, the default family agent, and the initial landing page.
+  Seeds local admin user, demo customer, plan/subscription, providers, provider models, the default family agent, and the initial landing page.
 
 ## Structural Notes
 - Keep the docs tree aligned with the actual build state.

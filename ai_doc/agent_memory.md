@@ -7,7 +7,7 @@ This file is the fast operational memory for any new agent opening ThreadCore in
 ThreadCore is a Laravel-based microsaas for managing AI threads, families, providers, customer access, subscriptions, and a gateway for other applications.
 
 ## Current Phase
-Laravel skeleton and first admin/provider verification slice.
+Laravel v1 microsaas implementation and hardening.
 
 ## What Is Already Implemented
 - The original seed note has been folded into the requirements.
@@ -20,7 +20,12 @@ Laravel skeleton and first admin/provider verification slice.
 - The admin URL prefix is configurable through `THREADCORE_ADMIN_PATH`; it currently remains `admin`.
 - Admin routes require both `auth` and an `admin` middleware check.
 - `/admin/providers` shows seeded provider records for authenticated users.
-- Feature tests cover the landing page, configurable admin path, auth redirection, and seeded provider visibility.
+- Admin CRUD exists for CMS pages, providers, provider models, and family agents.
+- Customer dashboard, API key management, usage, and gateway docs exist.
+- Customer accounts, internal plans/subscriptions, API keys, gateway logs, and request usage counters exist.
+- Gateway endpoints exist at `/api/v1/threads` and `/api/v1/threads/{public_id}/messages`.
+- Gateway API key auth, provider resolution, OpenRouter/Ollama adapters, token estimation, compaction, and command handling exist.
+- Feature and unit tests cover the landing page, CMS updates, configurable admin path, auth, admin guard, customer API keys, gateway thread/message flow, commands, and resolver precedence.
 
 ## Current Verified State
 - The project now has runnable Laravel code.
@@ -28,6 +33,7 @@ Laravel skeleton and first admin/provider verification slice.
 - Developer-specific language and tone are configured separately from the shared project contract.
 - MySQL migrations and seeders ran successfully against the local `threadcore` database.
 - `artisan test` passes.
+- HTTP smoke checks passed for the public landing page and demo customer dashboard.
 
 ## Authority And Resolution Rules
 - `AGENTS.md` defines the shared project contract.
@@ -58,13 +64,13 @@ Laravel skeleton and first admin/provider verification slice.
 - Implemented the first Laravel build slice: skeleton, auth, provider schema, provider seeding, admin provider verification view, and tests.
 - Added the configurable admin path and simple CMS-backed landing page.
 - Locked the admin area behind an `is_admin` check and made the admin bootstrap password explicit.
+- Implemented the remaining v1 plan: CMS/admin/customer UI, internal billing records, API keys, gateway endpoints, live provider adapters, request logs, command handling, and tests.
 
 ## What Still Needs To Be Done
-- Add admin CMS CRUD for editing the landing page and future public pages.
-- Add customer account and API key tables.
-- Define the API gateway contracts in more detail.
-- Implement provider resolution services and adapters.
-- Implement memory compaction and command handling.
+- Manually verify live OpenRouter and Ollama calls when the user wants to spend provider credits or has Ollama running.
+- Replace token estimation with a more exact tokenizer.
+- Add richer admin thread/log detail pages.
+- Add production deployment, monitoring, and external billing when needed.
 
 ## Read Order For New Agents
 - `AGENTS.md`

@@ -10,6 +10,7 @@ This folder now contains the human-facing support documents for ThreadCore.
 
 ## Main Entries
 - [04-accounts.md](./04-accounts.md)
+- [05-api-gateway.md](./05-api-gateway.md)
 
 ## Project Definition
 The core project definition, architecture, requirements, and rollout notes now live in `ai_doc/`.

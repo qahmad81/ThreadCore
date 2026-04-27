@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\CustomerAccount;
 use App\Models\FamilyAgent;
+use App\Models\Plan;
 use App\Models\Provider;
 use App\Models\SitePage;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +35,43 @@ class DatabaseSeeder extends Seeder
         }
 
         $adminUser->save();
+
+        $plan = Plan::query()->updateOrCreate(
+            ['slug' => 'starter'],
+            [
+                'name' => 'Starter',
+                'monthly_request_limit' => 1000,
+                'monthly_token_limit' => 1000000,
+                'is_active' => true,
+            ],
+        );
+
+        $customer = CustomerAccount::query()->updateOrCreate(
+            ['slug' => 'demo-customer'],
+            [
+                'name' => 'Demo Customer',
+                'status' => 'active',
+            ],
+        );
+
+        User::query()->updateOrCreate(
+            ['email' => config('threadcore.demo_customer.email')],
+            [
+                'customer_account_id' => $customer->id,
+                'name' => 'Demo Customer',
+                'password' => Hash::make(config('threadcore.demo_customer.password')),
+                'is_admin' => false,
+            ],
+        );
+
+        Subscription::query()->updateOrCreate(
+            ['customer_account_id' => $customer->id, 'plan_id' => $plan->id],
+            [
+                'status' => 'active',
+                'current_period_starts_at' => now()->startOfMonth(),
+                'current_period_ends_at' => now()->endOfMonth(),
+            ],
+        );
 
         $openRouter = Provider::query()->updateOrCreate(
             ['slug' => 'openrouter'],

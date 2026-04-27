@@ -13,6 +13,8 @@ class Thread extends Model
 
     protected $fillable = [
         'public_id',
+        'customer_account_id',
+        'api_key_id',
         'family_agent_id',
         'provider_id',
         'provider_model_id',
@@ -38,6 +40,16 @@ class Thread extends Model
     public function familyAgent(): BelongsTo
     {
         return $this->belongsTo(FamilyAgent::class);
+    }
+
+    public function customerAccount(): BelongsTo
+    {
+        return $this->belongsTo(CustomerAccount::class);
+    }
+
+    public function apiKey(): BelongsTo
+    {
+        return $this->belongsTo(ApiKey::class);
     }
 
     public function provider(): BelongsTo
