@@ -81,6 +81,44 @@ class AdminThreadsTest extends TestCase
             ->assertSee('Hello from OpenRouter');
     }
 
+    public function test_admin_can_export_thread_as_markdown(): void
+    {
+        $this->seed();
+        $admin = User::query()->where('email', config('threadcore.admin.email'))->firstOrFail();
+        $plainToken = $this->createApiKey();
+
+        Http::fake([
+            'openrouter.ai/*' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => 'Hello from OpenRouter'], 'finish_reason' => 'stop'],
+                ],
+                'usage' => ['prompt_tokens' => 9, 'completion_tokens' => 4],
+            ]),
+        ]);
+
+        $threadId = $this->withToken($plainToken)->postJson('/api/v1/threads', [
+            'family_agent' => 'default',
+            'content' => 'Hello',
+        ])->json('thread_id');
+
+        $thread = Thread::query()->where('public_id', $threadId)->firstOrFail();
+
+        $response = $this->actingAs($admin)->get(route('admin.threads.export', $thread));
+
+        $response->assertOk()
+            ->assertDownload('hello.md');
+
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('# Thread Conversation', $content);
+        $this->assertStringContainsString('### User', $content);
+        $this->assertStringContainsString('Hello from OpenRouter', $content);
+        $this->assertStringContainsString($thread->public_id, $content);
+        $this->assertStringNotContainsString('Metadata', $content);
+        $this->assertStringNotContainsString('```', $content);
+        $this->assertStringNotContainsString('Created:', $content);
+    }
+
     private function createApiKey(): string
     {
         $account = \App\Models\CustomerAccount::query()->firstOrFail();

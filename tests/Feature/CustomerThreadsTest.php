@@ -67,6 +67,44 @@ class CustomerThreadsTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_customer_can_export_own_thread_as_markdown(): void
+    {
+        $this->seed();
+
+        $user = User::query()->where('email', config('threadcore.demo_customer.email'))->firstOrFail();
+        $account = $user->customerAccount()->firstOrFail();
+        $ownThread = $this->createThreadForAccount($account, 'Customer thread one');
+
+        $response = $this->actingAs($user)->get(route('customer.threads.export', $ownThread->public_id));
+
+        $response->assertOk()
+            ->assertDownload('customer-thread-one.md');
+
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('# Thread Conversation', $content);
+        $this->assertStringContainsString('### User', $content);
+        $this->assertStringContainsString($ownThread->public_id, $content);
+        $this->assertStringContainsString('Hello from customer', $content);
+        $this->assertStringNotContainsString('Metadata', $content);
+        $this->assertStringNotContainsString('```', $content);
+        $this->assertStringNotContainsString('Created:', $content);
+    }
+
+    public function test_customer_export_falls_back_to_public_id_when_title_does_not_slug(): void
+    {
+        $this->seed();
+
+        $user = User::query()->where('email', config('threadcore.demo_customer.email'))->firstOrFail();
+        $account = $user->customerAccount()->firstOrFail();
+        $thread = $this->createThreadForAccount($account, '!!!');
+
+        $response = $this->actingAs($user)->get(route('customer.threads.export', $thread->public_id));
+
+        $response->assertOk()
+            ->assertDownload($thread->public_id.'.md');
+    }
+
     public function test_customer_threads_index_paginate_beyond_one_hundred_threads(): void
     {
         $this->seed();

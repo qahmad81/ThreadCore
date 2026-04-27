@@ -4,6 +4,7 @@
 
         <div class="actions" style="margin-bottom: 16px;">
             <a class="button" href="{{ route('customer.threads.index') }}">Back to threads</a>
+            <a class="button" href="{{ route('customer.threads.export', $thread->public_id) }}">Export md</a>
             <a class="button" href="{{ route('customer.docs') }}">API docs</a>
         </div>
 

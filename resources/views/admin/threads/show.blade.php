@@ -4,6 +4,7 @@
 
         <div class="actions" style="margin-bottom: 16px;">
             <a class="button" href="{{ route('admin.threads.index') }}">Back to threads</a>
+            <a class="button" href="{{ route('admin.threads.export', $thread) }}">Export md</a>
         </div>
 
         <section class="grid two">
