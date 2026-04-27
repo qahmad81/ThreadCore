@@ -5,6 +5,9 @@ node_modules/
 storage/logs/
 storage/*.key
 *.sqlite
+.phpunit.result.cache
+composer.phar
+.laravel-scaffold/
 .DS_Store
 ai_doc/plans/*
 !ai_doc/plans/.gitkeep
