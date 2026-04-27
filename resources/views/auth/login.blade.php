@@ -3,7 +3,7 @@
         <section class="panel panel-pad">
             <div class="brand" style="margin-bottom: 22px;">
                 <strong>ThreadCore</strong>
-                <span>Sign in to the local admin workspace.</span>
+                <span>Sign in to your admin or customer workspace.</span>
             </div>
 
             <form method="POST" action="{{ route('login.store') }}">

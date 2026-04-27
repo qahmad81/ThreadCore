@@ -3,4 +3,5 @@
     <a href="{{ route('customer.api-keys.index') }}">API Keys</a>
     <a href="{{ route('customer.usage') }}">Usage</a>
     <a href="{{ route('customer.docs') }}">Docs</a>
+    <a href="{{ route('customer.profile.edit') }}">Profile</a>
 </nav>

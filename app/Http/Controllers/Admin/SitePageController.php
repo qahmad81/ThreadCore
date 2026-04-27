@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SitePage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class SitePageController extends Controller
@@ -52,8 +53,19 @@ class SitePageController extends Controller
 
     private function validated(Request $request): array
     {
+        $reservedSlugs = [
+            config('threadcore.admin.path'),
+            'admin',
+            'api',
+            'customer',
+            'login',
+            'logout',
+            'storage',
+            'up',
+        ];
+
         $data = $request->validate([
-            'slug' => ['required', 'string', 'max:80'],
+            'slug' => ['required', 'string', 'max:80', Rule::notIn(array_unique($reservedSlugs))],
             'title' => ['required', 'string', 'max:160'],
             'headline' => ['required', 'string', 'max:220'],
             'summary' => ['nullable', 'string'],

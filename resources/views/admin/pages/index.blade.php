@@ -12,6 +12,9 @@
                             <td><strong>{{ $page->title }}</strong><div class="muted">/{{ $page->slug }}</div></td>
                             <td>{{ $page->is_published ? 'Published' : 'Draft' }}</td>
                             <td class="actions">
+                                @if ($page->is_published)
+                                    <a class="button" href="{{ $page->slug === 'landing' ? route('landing') : route('site.page', $page->slug) }}">View</a>
+                                @endif
                                 <a class="button" href="{{ route('admin.pages.edit', $page) }}">Edit</a>
                                 <form method="POST" action="{{ route('admin.pages.destroy', $page) }}">
                                     @csrf @method('DELETE')

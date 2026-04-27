@@ -5,16 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\SitePage;
 use Illuminate\View\View;
 
-class LandingPageController extends Controller
+class SitePageController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(string $slug): View
     {
         $page = SitePage::query()
-            ->where('slug', 'landing')
+            ->where('slug', $slug)
             ->where('is_published', true)
-            ->first();
+            ->firstOrFail();
 
-        return view('site.landing', [
+        return view('site.page', [
             'page' => $page,
             'publishedPages' => SitePage::query()
                 ->where('is_published', true)

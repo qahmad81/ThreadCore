@@ -20,6 +20,7 @@
             <label>Summary</label>
             <textarea name="summary">{{ old('summary', $page->summary) }}</textarea>
             <label>Blocks</label>
+            <p class="muted">Use one block per paragraph. Format each block as: Label | Title | Body</p>
             <textarea name="blocks_text" placeholder="Label | Title | Body">{{ $blocksText }}</textarea>
             <label><input name="is_published" type="checkbox" value="1" @checked(old('is_published', $page->is_published))> Published</label>
             <button class="button primary" type="submit">Save page</button>

@@ -17,15 +17,19 @@ Laravel v1 microsaas implementation and hardening.
 - Provider, provider model, family agent, thread, and thread message tables exist.
 - OpenRouter and Ollama records are seeded from local bootstrap environment values.
 - `/` renders a CMS-backed landing page from the `site_pages` table.
+- The homepage was recently tightened to use a more consistent typography scale, a smaller hero headline, a lighter capability strip, and a minimal footer line instead of a heavy lower band.
+- Published CMS pages other than `landing` are available as root-level slugs such as `/about`.
 - The admin URL prefix is configurable through `THREADCORE_ADMIN_PATH`; it currently remains `admin`.
 - Admin routes require both `auth` and an `admin` middleware check.
 - `/admin/providers` shows seeded provider records for authenticated users.
 - Admin CRUD exists for CMS pages, providers, provider models, and family agents.
-- Customer dashboard, API key management, usage, and gateway docs exist.
+- Customer dashboard, API key management, usage, profile/password management, and gateway docs exist. The dashboard includes onboarding for first API key creation, usage progress, recent API keys, and recent gateway requests.
+- Customer login redirects to `/customer/dashboard`; admin login redirects to the configured admin area.
 - Customer accounts, internal plans/subscriptions, API keys, gateway logs, and request usage counters exist.
 - Gateway endpoints exist at `/api/v1/threads` and `/api/v1/threads/{public_id}/messages`.
 - Gateway API key auth, provider resolution, OpenRouter/Ollama adapters, token estimation, compaction, and command handling exist.
-- Feature and unit tests cover the landing page, CMS updates, configurable admin path, auth, admin guard, customer API keys, gateway thread/message flow, commands, and resolver precedence.
+- Feature and unit tests cover the landing page, CMS updates, configurable admin path, auth, role-aware login redirects, admin guard, customer profile/password updates, customer API keys, gateway thread/message flow, commands, and resolver precedence.
+- Tests also cover public CMS slugs, unpublished page 404s, reserved CMS slugs, and catch-all route regressions.
 
 ## Current Verified State
 - The project now has runnable Laravel code.
@@ -63,6 +67,7 @@ Laravel v1 microsaas implementation and hardening.
 - Added `ai_doc/plans/build-web-app-plan.md` as the concrete phased plan for building the Laravel web app from the documentation base.
 - Implemented the first Laravel build slice: skeleton, auth, provider schema, provider seeding, admin provider verification view, and tests.
 - Added the configurable admin path and simple CMS-backed landing page.
+- Refined the homepage visual hierarchy to remove the bulky lower footer-like band, reduce the hero headline size, and make typography feel more coherent.
 - Locked the admin area behind an `is_admin` check and made the admin bootstrap password explicit.
 - Implemented the remaining v1 plan: CMS/admin/customer UI, internal billing records, API keys, gateway endpoints, live provider adapters, request logs, command handling, and tests.
 

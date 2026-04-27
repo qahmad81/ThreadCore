@@ -80,9 +80,11 @@
 - `app/Http/Controllers/Api/GatewayThreadController.php`
   Gateway endpoints for creating threads and posting messages.
 - `app/Http/Controllers/Customer/`
-  Customer dashboard, API keys, usage, and docs.
+  Customer dashboard, API keys, usage, profile/password management, and docs.
 - `app/Http/Controllers/LandingPageController.php`
   Public landing page renderer backed by `site_pages`.
+- `app/Http/Controllers/SitePageController.php`
+  Public renderer for published CMS pages at root-level slugs.
 - `app/Models/Provider.php`
   Provider records such as OpenRouter and Ollama.
 - `app/Models/ProviderModel.php`

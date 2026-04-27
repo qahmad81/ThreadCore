@@ -30,7 +30,11 @@ class SessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.providers.index'));
+        if ($request->user()->is_admin) {
+            return redirect()->intended(route('admin.providers.index'));
+        }
+
+        return redirect()->route('customer.dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse

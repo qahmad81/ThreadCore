@@ -16,6 +16,9 @@ class ExampleTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('Manage AI threads, providers, and agent memory from one gateway.')
-            ->assertSee('One API surface');
+            ->assertSee('One API surface')
+            ->assertSee('Open customer dashboard')
+            ->assertSee('Gateway flow')
+            ->assertDontSee('Admin or customer sign in');
     }
 }

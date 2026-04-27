@@ -12,8 +12,10 @@ use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Customer\ApiKeyController;
 use App\Http\Controllers\Customer\DashboardController;
 use App\Http\Controllers\Customer\DocsController;
+use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Customer\UsageController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\SitePageController as PublicSitePageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', LandingPageController::class)->name('landing');
@@ -40,10 +42,18 @@ Route::middleware(['auth', 'admin'])->prefix(config('threadcore.admin.path'))->n
 });
 
 Route::middleware('auth')->prefix('customer')->name('customer.')->group(function () {
-    Route::get('/', DashboardController::class)->name('dashboard');
+    Route::redirect('/', '/customer/dashboard')->name('home');
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/api-keys', [ApiKeyController::class, 'index'])->name('api-keys.index');
     Route::post('/api-keys', [ApiKeyController::class, 'store'])->name('api-keys.store');
     Route::delete('/api-keys/{apiKey}', [ApiKeyController::class, 'destroy'])->name('api-keys.destroy');
     Route::get('/usage', UsageController::class)->name('usage');
     Route::get('/docs', DocsController::class)->name('docs');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
 });
+
+Route::get('/{slug}', PublicSitePageController::class)
+    ->where('slug', '[A-Za-z0-9-]+')
+    ->name('site.page');
