@@ -1,0 +1,17 @@
+.env
+.env.*
+vendor/
+node_modules/
+storage/logs/
+storage/*.key
+*.sqlite
+.DS_Store
+ai_doc/plans/*
+!ai_doc/plans/.gitkeep
+ai_doc/01-requirements.md
+ai_doc/03-roadmap.md
+ai_doc/07-system-environment.md
+ai_doc/agent_local.md
+ai_doc/cli-reference.json
+ai_doc/known-operational-issues.md
+ai_doc/current-status.md
