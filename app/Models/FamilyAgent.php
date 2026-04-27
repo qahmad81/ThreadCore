@@ -18,8 +18,11 @@ class FamilyAgent extends Model
         'system_prompt',
         'default_provider_id',
         'default_provider_model_id',
+        'compaction_provider_id',
+        'compaction_provider_model_id',
         'max_context_tokens',
         'compaction_threshold_tokens',
+        'compaction_prompt',
         'is_enabled',
         'metadata',
     ];
@@ -42,6 +45,16 @@ class FamilyAgent extends Model
     public function defaultProviderModel(): BelongsTo
     {
         return $this->belongsTo(ProviderModel::class, 'default_provider_model_id');
+    }
+
+    public function compactionProvider(): BelongsTo
+    {
+        return $this->belongsTo(Provider::class, 'compaction_provider_id');
+    }
+
+    public function compactionProviderModel(): BelongsTo
+    {
+        return $this->belongsTo(ProviderModel::class, 'compaction_provider_model_id');
     }
 
     public function threads(): HasMany

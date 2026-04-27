@@ -15,7 +15,10 @@ class FamilyAgentController extends Controller
     public function index(): View
     {
         return view('admin.family-agents.index', [
-            'families' => FamilyAgent::query()->with(['defaultProvider', 'defaultProviderModel'])->orderBy('number')->get(),
+            'families' => FamilyAgent::query()
+                ->with(['defaultProvider', 'defaultProviderModel', 'compactionProvider', 'compactionProviderModel'])
+                ->orderBy('number')
+                ->get(),
         ]);
     }
 
@@ -61,14 +64,18 @@ class FamilyAgentController extends Controller
             'system_prompt' => ['nullable', 'string'],
             'default_provider_id' => ['nullable', 'exists:providers,id'],
             'default_provider_model_id' => ['nullable', 'exists:provider_models,id'],
+            'compaction_provider_id' => ['nullable', 'exists:providers,id'],
+            'compaction_provider_model_id' => ['nullable', 'exists:provider_models,id'],
             'max_context_tokens' => ['required', 'integer', 'min:1'],
             'compaction_threshold_tokens' => ['required', 'integer', 'min:1'],
+            'compaction_prompt' => ['nullable', 'string'],
             'is_enabled' => ['nullable', 'boolean'],
         ]);
 
         return [
             ...$data,
             'number' => str($data['number'])->slug()->toString(),
+            'compaction_prompt' => filled($data['compaction_prompt'] ?? null) ? $data['compaction_prompt'] : 'Compacted memory',
             'is_enabled' => $request->boolean('is_enabled'),
         ];
     }

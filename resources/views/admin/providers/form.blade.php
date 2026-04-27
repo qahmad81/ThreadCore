@@ -26,7 +26,7 @@
                     </select>
                 </div>
                 <div>
-                    <label>API key env</label>
+                    <label>API key env or token</label>
                     <input name="api_key_env" type="text" value="{{ old('api_key_env', $provider->api_key_env) }}">
                 </div>
             </div>

@@ -34,6 +34,28 @@
                 <div><label>Max context tokens</label><input name="max_context_tokens" type="number" value="{{ old('max_context_tokens', $family->max_context_tokens ?: 8192) }}" required></div>
                 <div><label>Compaction threshold</label><input name="compaction_threshold_tokens" type="number" value="{{ old('compaction_threshold_tokens', $family->compaction_threshold_tokens ?: 7000) }}" required></div>
             </div>
+            <div class="grid two">
+                <div>
+                    <label>Compaction provider</label>
+                    <select name="compaction_provider_id">
+                        <option value="">Default provider</option>
+                        @foreach ($providers as $provider)
+                            <option value="{{ $provider->id }}" @selected(old('compaction_provider_id', $family->compaction_provider_id) == $provider->id)>{{ $provider->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label>Compaction model</label>
+                    <select name="compaction_provider_model_id">
+                        <option value="">Default model</option>
+                        @foreach ($models as $model)
+                            <option value="{{ $model->id }}" @selected(old('compaction_provider_model_id', $family->compaction_provider_model_id) == $model->id)>{{ $model->provider?->name }} / {{ $model->model_key }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <label>Compaction prompt</label>
+            <textarea name="compaction_prompt" placeholder="Compacted memory">{{ old('compaction_prompt', $family->compaction_prompt ?: 'Compacted memory') }}</textarea>
             <label><input name="is_enabled" type="checkbox" value="1" @checked(old('is_enabled', $family->is_enabled ?? true))> Enabled</label>
             <button class="button primary" type="submit">Save family agent</button>
         </form>

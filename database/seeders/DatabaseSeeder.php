@@ -142,6 +142,9 @@ class DatabaseSeeder extends Seeder
                 'default_provider_model_id' => $openRouterMain->id,
                 'max_context_tokens' => 8192,
                 'compaction_threshold_tokens' => 7000,
+                'compaction_provider_id' => null,
+                'compaction_provider_model_id' => null,
+                'compaction_prompt' => 'Compacted memory',
                 'is_enabled' => true,
             ],
         );

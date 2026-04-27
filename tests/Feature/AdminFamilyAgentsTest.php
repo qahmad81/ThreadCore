@@ -26,6 +26,9 @@ class AdminFamilyAgentsTest extends TestCase
             'system_prompt' => 'Be helpful.',
             'default_provider_id' => $provider->id,
             'default_provider_model_id' => $model->id,
+            'compaction_provider_id' => $provider->id,
+            'compaction_provider_model_id' => $model->id,
+            'compaction_prompt' => '',
             'max_context_tokens' => 4096,
             'compaction_threshold_tokens' => 3000,
             'is_enabled' => 1,
@@ -34,10 +37,15 @@ class AdminFamilyAgentsTest extends TestCase
         $family = FamilyAgent::query()->where('number', 'assistant-1')->firstOrFail();
 
         $this->assertSame('Optional helper description', $family->description);
+        $this->assertSame($provider->id, $family->compaction_provider_id);
+        $this->assertSame($model->id, $family->compaction_provider_model_id);
+        $this->assertSame('Compacted memory', $family->compaction_prompt);
 
         $this->actingAs($admin)
             ->get(route('admin.family-agents.edit', $family))
             ->assertOk()
-            ->assertSee('Optional helper description');
+            ->assertSee('Optional helper description')
+            ->assertSee('Compaction provider')
+            ->assertSee('Compacted memory');
     }
 }
