@@ -1,10 +1,10 @@
 # Overview
 
 ## Current Goal
-Build the documentation foundation for ThreadCore, a Laravel-based microsaas for AI thread orchestration, provider management, and API gateway usage.
+Build ThreadCore as a Laravel-based microsaas for AI thread orchestration, provider management, and API gateway usage.
 
 ## Current Scope
-Documentation only. No application code is being implemented in this step.
+Laravel skeleton and the first admin/provider verification slice are now implemented. Gateway behavior, customer API keys, billing, and provider adapters remain upcoming work.
 
 ## Product Principles
 - Keep the project English-first for app-facing assets and documentation.
@@ -13,4 +13,4 @@ Documentation only. No application code is being implemented in this step.
 - Keep token accounting and memory compaction as first-class product behavior.
 
 ## Current Status
-The project began from a seed note and now has a clean documentation base.
+The project began from a seed note, gained a clean documentation base, and now has a Laravel 12 application skeleton with seeded provider records.

@@ -4,6 +4,7 @@ This folder now contains the human-facing support documents for ThreadCore.
 
 ## Purpose
 - Keep account and subscription notes available for humans
+- Track public site/CMS notes as the app grows
 - Provide a small entry point into the project documentation
 - Avoid duplicating the full agent seed in the human docs area
 

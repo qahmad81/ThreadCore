@@ -2,9 +2,9 @@
 
 ## High-Level Layers
 - Public application layer
-  Handles customer accounts, subscriptions, keys, and basic site content.
+  Handles the CMS-backed landing page, customer accounts, subscriptions, keys, and basic site content.
 - Admin layer
-  Manages providers, families, models, and operational settings.
+  Manages providers, families, models, CMS pages, and operational settings. The URL prefix is configurable through `THREADCORE_ADMIN_PATH`.
 - API gateway layer
   Opens threads, posts messages, resolves defaults, and returns model responses.
 - Agent orchestration layer
@@ -33,3 +33,4 @@
 - Keep the architecture fork-friendly.
 - Make provider selection and thread behavior configurable without editing the core flow.
 - Preserve a clear separation between human-facing docs and agent-facing docs.
+- Do not hardcode the admin URL path in user-facing assumptions; the default is `admin`, but local deployments may change it.

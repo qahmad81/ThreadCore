@@ -3,10 +3,28 @@
 ## Root
 - `AGENTS.md`
   Root entry contract for agents working in this workspace.
+- `app/`
+  Laravel application code, including models and HTTP controllers.
 - `ai_doc/`
   Agent-facing project documentation and local developer preferences.
+- `bootstrap/`
+  Laravel bootstrap and cache files.
+- `config/`
+  Laravel configuration, including `threadcore.php` for provider bootstrap settings.
+- `database/`
+  Migrations, factories, and seeders.
 - `docs/`
   Human-facing project documentation and durable planning notes.
+- `public/`
+  Laravel public entrypoint and public assets.
+- `resources/`
+  Blade views and frontend resources.
+- `routes/`
+  Laravel route definitions.
+- `storage/`
+  Laravel runtime storage.
+- `tests/`
+  PHPUnit feature and unit tests.
 - `.ignore`
   Seeding ignore list for procedural and development-state files.
 
@@ -46,13 +64,27 @@
 - `docs/README.md`
   Human-facing introduction to the docs folder.
 
-## Future Application Structure
-- `app/`
-- `routes/`
-- `database/`
-- `resources/`
-- `config/`
-- `tests/`
+## Implemented Application Structure
+- `app/Http/Controllers/Auth/SessionController.php`
+  Basic local session login/logout.
+- `app/Http/Controllers/Admin/ProviderController.php`
+  Authenticated provider verification screen.
+- `app/Http/Controllers/LandingPageController.php`
+  Public landing page renderer backed by `site_pages`.
+- `app/Models/Provider.php`
+  Provider records such as OpenRouter and Ollama.
+- `app/Models/ProviderModel.php`
+  Models available through each provider.
+- `app/Models/FamilyAgent.php`
+  Family-agent configuration and defaults.
+- `app/Models/Thread.php`
+  Thread metadata and token counters.
+- `app/Models/ThreadMessage.php`
+  Thread messages, command markers, and compaction flags.
+- `app/Models/SitePage.php`
+  CMS page records used for the public landing page and future site pages.
+- `database/seeders/DatabaseSeeder.php`
+  Seeds local admin user, providers, provider models, the default family agent, and the initial landing page.
 
 ## Structural Notes
 - Keep the docs tree aligned with the actual build state.
