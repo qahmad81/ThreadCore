@@ -2,18 +2,37 @@
 
 namespace App\Services\Gateway;
 
+use App\Models\FamilyAgent;
+use App\Models\Provider;
+use App\Models\ProviderModel;
 use App\Models\Thread;
+use App\Services\Ai\ProviderClientManager;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class CompactionService
 {
-    public function compact(Thread $thread, bool $force = false): bool
+    public function __construct(
+        private readonly ProviderClientManager $clients,
+        private readonly TokenEstimator $tokens,
+    ) {
+    }
+
+    public function compact(Thread $thread, bool $force = false, array $overrides = []): CompactionResult
     {
         $family = $thread->familyAgent;
         $total = $thread->input_tokens + $thread->output_tokens;
 
         if (! $force && $total < $family->compaction_threshold_tokens) {
-            return false;
+            return new CompactionResult();
         }
+
+        $pendingMemoryMessages = $thread->messages()
+            ->where('is_compacted', false)
+            ->where('is_memory', true)
+            ->where('is_forgotten', false)
+            ->oldest()
+            ->get();
 
         $rawMessages = $thread->messages()
             ->where('is_compacted', false)
@@ -22,30 +41,114 @@ class CompactionService
             ->oldest()
             ->get();
 
-        if ($rawMessages->count() < 2) {
-            return false;
+        $messagesForCompaction = $pendingMemoryMessages->concat($rawMessages);
+
+        if ($rawMessages->isEmpty() || $messagesForCompaction->count() < 2) {
+            return new CompactionResult();
         }
 
-        $summary = $rawMessages
-            ->take(12)
-            ->map(fn ($message) => strtoupper($message->role).': '.mb_substr($message->content, 0, 300))
+        [$compactionProvider, $compactionModel] = $this->resolveCompactionRoute($family, $force ? $overrides : []);
+        $compactionPrompt = filled($family->compaction_prompt) ? $family->compaction_prompt : 'Compacted memory';
+
+        $allMessages = $messagesForCompaction
+            ->map(fn ($message) => strtoupper($message->role).': '.$message->content)
             ->implode("\n");
 
-        $thread->messages()->create([
-            'role' => 'system',
-            'content' => "Compacted memory:\n".$summary,
-            'is_compacted' => true,
-            'is_memory' => true,
-            'metadata' => ['generated_by' => 'local_compaction_v1'],
-        ]);
+        $response = $this->clients->forProvider($compactionProvider)->chat($compactionProvider, $compactionModel, [
+            ['role' => 'user', 'content' => $compactionPrompt.":\n".$allMessages],
+        ], $overrides);
 
-        $thread->messages()
-            ->whereIn('id', $rawMessages->pluck('id'))
-            ->update(['is_compacted' => true]);
+        if (trim($response->content) === '') {
+            throw new RuntimeException("Compaction provider [{$compactionProvider->slug}] returned empty content.");
+        }
 
-        $thread->forceFill(['compacted_at' => now()])->save();
+        $compactedContent = $response->content;
+        $inputTokens = $response->inputTokens ?: $this->tokens->estimate($allMessages);
+        $outputTokens = $response->outputTokens ?: $this->tokens->estimate($compactedContent);
 
-        return true;
+        DB::transaction(function () use ($thread, $messagesForCompaction, $pendingMemoryMessages, $rawMessages, $compactionProvider, $compactionModel, $response, $allMessages, $compactedContent, $inputTokens, $outputTokens): void {
+            $thread->messages()
+                ->whereIn('id', $messagesForCompaction->pluck('id'))
+                ->update(['is_compacted' => true]);
+
+            $thread->messages()->create([
+                'role' => 'system',
+                'content' => $compactedContent,
+                'input_tokens' => $inputTokens,
+                'output_tokens' => $outputTokens,
+                'is_compacted' => false,
+                'is_memory' => true,
+                'metadata' => [
+                    'generated_by' => 'ai_compaction_v1',
+                    'raw_message_count' => $rawMessages->count(),
+                    'pending_memory_count' => $pendingMemoryMessages->count(),
+                    'compaction_provider_id' => $compactionProvider?->id,
+                    'compaction_provider' => $compactionProvider?->slug,
+                    'compaction_provider_model_id' => $compactionModel?->id,
+                    'compaction_model' => $compactionModel?->model_key,
+                    'finish_reason' => $response->finishReason,
+                ],
+            ]);
+
+            $thread->forceFill(['compacted_at' => now()])->save();
+        });
+
+        return new CompactionResult(
+            true,
+            $inputTokens,
+            $outputTokens,
+            $compactionProvider?->id,
+            $compactionModel?->id,
+            $compactionProvider?->slug,
+            $compactionModel?->model_key,
+        );
+    }
+
+    /**
+     * @return array{0: Provider, 1: ProviderModel}
+     */
+    private function resolveCompactionRoute(FamilyAgent $family, array $overrides = []): array
+    {
+        $provider = null;
+        $model = null;
+
+        if (! empty($overrides['provider'])) {
+            $provider = Provider::query()->where('slug', $overrides['provider'])->where('is_enabled', true)->first();
+        }
+
+        $provider ??= $family->compactionProvider;
+        $provider ??= $family->defaultProvider;
+        $provider ??= Provider::query()->where('is_default', true)->where('is_enabled', true)->first();
+        $provider ??= Provider::query()->where('is_enabled', true)->first();
+
+        if (! $provider) {
+            throw new RuntimeException('No enabled provider is available for compaction.');
+        }
+
+        if (! empty($overrides['model'])) {
+            $model = ProviderModel::query()
+                ->where('provider_id', $provider->id)
+                ->where('model_key', $overrides['model'])
+                ->where('is_enabled', true)
+                ->first();
+        }
+
+        if ($family->compaction_provider_model_id && $family->compactionProviderModel?->provider_id === $provider->id) {
+            $model ??= $family->compactionProviderModel;
+        }
+
+        if ($family->default_provider_model_id && $family->defaultProviderModel?->provider_id === $provider->id) {
+            $model ??= $family->defaultProviderModel;
+        }
+
+        $model ??= $provider->models()->where('is_default', true)->where('is_enabled', true)->first();
+        $model ??= $provider->models()->where('is_enabled', true)->first();
+
+        if (! $model) {
+            throw new RuntimeException("Provider [{$provider->slug}] has no enabled compaction model.");
+        }
+
+        return [$provider, $model];
     }
 
     public function forget(Thread $thread, string $needle): int

@@ -23,7 +23,7 @@ class HistoryBuilder
         }
 
         foreach ($thread->messages()->oldest()->get() as $message) {
-            if ($message->is_forgotten || ($message->is_compacted && ! $message->is_memory)) {
+            if ($message->is_forgotten || $message->is_compacted) {
                 continue;
             }
 

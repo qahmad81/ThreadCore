@@ -143,22 +143,22 @@
                 <tbody>
                     <tr>
                         <td><code>/whisper</code></td>
-                        <td>Sends the message to the model without storing the turn in thread history.</td>
+                        <td>Calls the model, then stores both turns as forgotten so they stay out of future history.</td>
                         <td><code>/whisper private note</code></td>
                     </tr>
                     <tr>
                         <td><code>/skip</code></td>
-                        <td>Skips recent memory when building context, but still saves the turn.</td>
+                        <td>Calls the model with reduced memory, then stores both turns as forgotten so they stay out of future history.</td>
                         <td><code>/skip answer this without memory</code></td>
                     </tr>
                     <tr>
                         <td><code>/dayend</code></td>
-                        <td>Forces compaction after the response is generated.</td>
+                        <td>Handled programmatically with no stored turn. It returns a JSON status message and may still trigger internal compaction.</td>
                         <td><code>/dayend summarize today</code></td>
                     </tr>
                     <tr>
                         <td><code>/forget</code></td>
-                        <td>Marks matching memory items as forgotten and does not send them back as raw history.</td>
+                        <td>Handled programmatically, marks matching memory items as forgotten, and stores the command as forgotten.</td>
                         <td><code>/forget alpha</code></td>
                     </tr>
                 </tbody>
