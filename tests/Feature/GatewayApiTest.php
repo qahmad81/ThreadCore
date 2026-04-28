@@ -28,6 +28,7 @@ class GatewayApiTest extends TestCase
         $account = \App\Models\CustomerAccount::query()->firstOrFail();
         $beforeThreads = Thread::query()->count();
         $beforeRequests = $account->activeSubscription->requests_used;
+        $beforeTokens = $account->activeSubscription->tokens_used;
 
         $this->withToken($plainToken)->postJson('/api/v1/threads', [
             'family_agent' => 'default',
@@ -38,6 +39,7 @@ class GatewayApiTest extends TestCase
 
         $account->refresh();
         $this->assertSame($beforeRequests + 1, $account->activeSubscription->requests_used);
+        $this->assertSame($beforeTokens, $account->activeSubscription->tokens_used);
         $this->assertSame($beforeThreads, Thread::query()->count());
         $this->assertDatabaseHas('gateway_request_logs', [
             'customer_account_id' => $account->id,
@@ -72,6 +74,7 @@ class GatewayApiTest extends TestCase
         ]);
 
         $beforeRequests = $account->activeSubscription->requests_used;
+        $beforeTokens = $account->activeSubscription->tokens_used;
 
         $this->withToken($plainToken)->postJson("/api/v1/threads/{$thread->public_id}/messages", [
             'content' => '/dayend close day',
@@ -81,6 +84,7 @@ class GatewayApiTest extends TestCase
 
         $account->refresh();
         $this->assertSame($beforeRequests, $account->activeSubscription->requests_used);
+        $this->assertSame($beforeTokens, $account->activeSubscription->tokens_used);
         $this->assertDatabaseHas('gateway_request_logs', [
             'request_payload->command' => 'dayend',
             'response_metadata->compaction_triggered' => false,
@@ -117,6 +121,9 @@ class GatewayApiTest extends TestCase
         ])->assertStatus(502)
             ->assertJsonPath('message', 'Provider request failed.');
 
+        $account->refresh();
+        $this->assertSame(0, $account->activeSubscription->tokens_used);
+
         $fresh = $thread->fresh();
         $this->assertSame(2, $fresh->messages()->count());
         $this->assertSame(0, $fresh->messages()->where('is_memory', true)->count());
@@ -152,6 +159,19 @@ class GatewayApiTest extends TestCase
 
         $this->assertSame(1, Thread::query()->count());
         $this->assertSame(4, Thread::query()->first()->messages()->count());
+        $account = \App\Models\CustomerAccount::query()->firstOrFail();
+        $this->assertSame(26, $account->activeSubscription->tokens_used);
+
+        $thread = Thread::query()->firstOrFail();
+        $firstUserMessage = $thread->messages()->where('role', 'user')->orderBy('id')->firstOrFail();
+        $firstAssistantMessage = $thread->messages()->where('role', 'assistant')->orderBy('id')->firstOrFail();
+
+        $this->assertSame(0, $firstUserMessage->input_tokens);
+        $this->assertSame(0, $firstUserMessage->output_tokens);
+        $this->assertSame('0.000000', $firstUserMessage->cost);
+        $this->assertSame(9, $firstAssistantMessage->input_tokens);
+        $this->assertSame(4, $firstAssistantMessage->output_tokens);
+        $this->assertSame('0.000000', $firstAssistantMessage->cost);
     }
 
     public function test_gateway_commands_skip_whisper_dayend_and_forget(): void
@@ -306,6 +326,7 @@ class GatewayApiTest extends TestCase
 
         $account = \App\Models\CustomerAccount::query()->firstOrFail();
         $beforeRequests = $account->activeSubscription->requests_used;
+        $beforeTokens = $account->activeSubscription->tokens_used;
 
         $this->withToken($plainToken)->postJson("/api/v1/threads/{$created['thread_id']}/messages", [
             'content' => '/forget alpha',
@@ -313,6 +334,7 @@ class GatewayApiTest extends TestCase
 
         $account->refresh();
         $this->assertSame($beforeRequests + 1, $account->activeSubscription->requests_used);
+        $this->assertSame($beforeTokens, $account->activeSubscription->tokens_used);
         $this->assertDatabaseHas('gateway_request_logs', [
             'status' => 'ok',
             'request_payload->command' => 'forget',
@@ -328,16 +350,24 @@ class GatewayApiTest extends TestCase
                 'choices' => [
                     ['message' => ['content' => 'Compressed memory result'], 'finish_reason' => 'stop'],
                 ],
-                'usage' => ['prompt_tokens' => 120, 'completion_tokens' => 12],
+                'usage' => ['prompt_tokens' => 120, 'completion_tokens' => 12, 'cost' => 0.123456],
             ]),
         ]);
 
         $family = \App\Models\FamilyAgent::query()->where('number', 'default')->firstOrFail();
+        $pricingModel = $family->defaultProviderModel;
+        $pricingModel->forceFill([
+            'pricing' => [
+                'prompt_tokens' => 0.000001,
+                'completion_tokens' => 0.000002,
+            ],
+        ])->save();
+
         $thread = Thread::query()->create([
             'public_id' => (string) Str::uuid(),
             'family_agent_id' => $family->id,
             'provider_id' => $family->default_provider_id,
-            'provider_model_id' => $family->default_provider_model_id,
+            'provider_model_id' => $pricingModel->id,
             'title' => 'Compaction coverage',
             'input_tokens' => 1,
             'output_tokens' => 1,
@@ -358,6 +388,14 @@ class GatewayApiTest extends TestCase
         $this->assertSame('Compressed memory result', $memory->content);
         $this->assertSame(120, $memory->input_tokens);
         $this->assertSame(12, $memory->output_tokens);
+        $this->assertSame('0.000144', $memory->cost);
+        $this->assertSame([
+            'prompt_tokens' => 120,
+            'completion_tokens' => 12,
+            'prompt_cache_hit_tokens' => 0,
+            'prompt_cache_miss_tokens' => 120,
+            'reasoning_tokens' => 0,
+        ], $memory->metadata['usage']);
         $this->assertSame(13, $memory->metadata['raw_message_count']);
         $this->assertSame('ai_compaction_v1', $memory->metadata['generated_by']);
 
@@ -449,6 +487,45 @@ class GatewayApiTest extends TestCase
         $this->assertSame(0, $fresh->messages()->where('is_compacted', true)->count());
         $this->assertSame(0, $fresh->messages()->where('is_memory', true)->count());
         $this->assertNull($fresh->compacted_at);
+    }
+
+    public function test_automatic_compaction_uses_active_context_not_cumulative_thread_totals(): void
+    {
+        $this->seed();
+
+        Http::preventStrayRequests();
+
+        $family = \App\Models\FamilyAgent::query()->where('number', 'default')->firstOrFail();
+        $family->forceFill([
+            'compaction_threshold_tokens' => 4000,
+            'max_context_tokens' => 5000,
+        ])->save();
+
+        $thread = Thread::query()->create([
+            'public_id' => (string) Str::uuid(),
+            'family_agent_id' => $family->id,
+            'provider_id' => $family->default_provider_id,
+            'provider_model_id' => $family->default_provider_model_id,
+            'title' => 'Compaction threshold reset',
+            'input_tokens' => 15000,
+            'output_tokens' => 7000,
+            'max_context_tokens' => 5000,
+        ]);
+
+        $thread->messages()->create([
+            'role' => 'system',
+            'content' => 'Already compacted memory',
+            'is_compacted' => true,
+            'is_memory' => true,
+        ]);
+        $thread->messages()->create(['role' => 'user', 'content' => 'short raw']);
+        $thread->messages()->create(['role' => 'assistant', 'content' => 'short reply']);
+
+        $result = app(CompactionService::class)->compact($thread->fresh(), false);
+
+        $this->assertFalse($result->triggered);
+        $this->assertNull($thread->fresh()->compacted_at);
+        $this->assertSame(0, $thread->fresh()->messages()->where('is_memory', true)->where('is_compacted', false)->count());
     }
 
     public function test_next_compaction_reuses_latest_uncompacted_memory_with_new_raw_messages(): void

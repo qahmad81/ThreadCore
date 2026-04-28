@@ -50,7 +50,7 @@ class GatewayThreadController extends Controller
         $content = $this->commands->withoutCommand($data['content']);
         $inputEstimate = $this->tokens->estimate($content);
 
-        $this->limits->assertCanUse($account, $inputEstimate);
+        $this->limits->assertCanUse($account, $command === 'dayend' ? 0 : $inputEstimate);
 
         if ($command === 'dayend') {
             $route = $this->resolver->resolve($family, null, $data);
@@ -131,7 +131,7 @@ class GatewayThreadController extends Controller
         $content = $this->commands->withoutCommand($data['content']);
         $inputEstimate = $this->tokens->estimate($content);
 
-        $this->limits->assertCanUse($account, $inputEstimate);
+        $this->limits->assertCanUse($account, $command === 'forget' ? 0 : $inputEstimate);
 
         if ($command === 'dayend') {
             try {
@@ -195,7 +195,9 @@ class GatewayThreadController extends Controller
             $thread->messages()->create([
                 'role' => 'user',
                 'content' => $content,
-                'input_tokens' => $inputEstimate,
+                'input_tokens' => 0,
+                'output_tokens' => 0,
+                'cost' => '0.000000',
                 'command' => $command,
                 'is_forgotten' => true,
             ]);
@@ -203,12 +205,14 @@ class GatewayThreadController extends Controller
             $thread->messages()->create([
                 'role' => 'assistant',
                 'content' => 'Order done!!',
+                'input_tokens' => 0,
                 'output_tokens' => 0,
+                'cost' => '0.000000',
                 'is_forgotten' => true,
                 'metadata' => ['forgotten' => $forgotten],
             ]);
 
-            $this->limits->recordUsage($account, $inputEstimate);
+            $this->limits->recordUsage($account, 0);
 
             GatewayRequestLog::query()->create([
                 'customer_account_id' => $account->id,
@@ -217,7 +221,7 @@ class GatewayThreadController extends Controller
                 'provider_id' => $thread->provider_id,
                 'provider_model_id' => $thread->provider_model_id,
                 'status' => 'ok',
-                'input_tokens' => $inputEstimate,
+                'input_tokens' => 0,
                 'output_tokens' => 0,
                 'request_payload' => ['command' => $command, 'content' => Str::limit($content, 500)],
                 'response_metadata' => ['forgotten' => $forgotten],
@@ -226,7 +230,7 @@ class GatewayThreadController extends Controller
             return response()->json([
                 'thread_id' => $thread->public_id,
                 'response' => 'Order done!!',
-                'usage' => ['input_tokens' => $inputEstimate, 'output_tokens' => 0],
+                'usage' => ['input_tokens' => 0, 'output_tokens' => 0],
                 'max_context_tokens' => $thread->max_context_tokens,
                 'compaction' => ['triggered' => false],
             ]);
@@ -245,7 +249,9 @@ class GatewayThreadController extends Controller
                 $thread->messages()->create([
                     'role' => 'user',
                     'content' => $content,
-                    'input_tokens' => $inputEstimate,
+                    'input_tokens' => 0,
+                    'output_tokens' => 0,
+                    'cost' => '0.000000',
                     'command' => $command,
                     'is_forgotten' => true,
                 ]);
@@ -253,9 +259,14 @@ class GatewayThreadController extends Controller
                 $thread->messages()->create([
                     'role' => 'assistant',
                     'content' => $response->content,
+                    'input_tokens' => $inputTokens,
                     'output_tokens' => $outputTokens,
+                    'cost' => $response->cost,
                     'is_forgotten' => true,
-                    'metadata' => ['finish_reason' => $response->finishReason],
+                    'metadata' => [
+                        'finish_reason' => $response->finishReason,
+                        'usage' => $response->usage,
+                    ],
                 ]);
 
                 $thread->increment('input_tokens', $inputTokens);
@@ -288,6 +299,7 @@ class GatewayThreadController extends Controller
                     'response_metadata' => array_filter(
                         array_merge($response->metadata, [
                             'finish_reason' => $response->finishReason,
+                            'normalized_usage' => $response->usage,
                             'compaction_triggered' => $compaction->triggered,
                             'compaction_error' => $compactionError,
                         ]),
@@ -333,15 +345,22 @@ class GatewayThreadController extends Controller
             $userMessage = $thread->messages()->create([
                 'role' => 'user',
                 'content' => $content,
-                'input_tokens' => $inputEstimate,
+                'input_tokens' => 0,
+                'output_tokens' => 0,
+                'cost' => '0.000000',
                 'command' => null,
             ]);
 
             $thread->messages()->create([
                 'role' => 'assistant',
                 'content' => $response->content,
+                'input_tokens' => $inputTokens,
                 'output_tokens' => $outputTokens,
-                'metadata' => ['finish_reason' => $response->finishReason],
+                'cost' => $response->cost,
+                'metadata' => [
+                    'finish_reason' => $response->finishReason,
+                    'usage' => $response->usage,
+                ],
             ]);
 
             $thread->increment('input_tokens', $inputTokens);
@@ -374,6 +393,7 @@ class GatewayThreadController extends Controller
                     'response_metadata' => array_filter(
                         array_merge($response->metadata, [
                             'finish_reason' => $response->finishReason,
+                            'normalized_usage' => $response->usage,
                             'compaction_triggered' => $compaction->triggered,
                             'compaction_error' => $compactionError,
                         ]),

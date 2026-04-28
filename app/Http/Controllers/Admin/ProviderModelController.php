@@ -69,12 +69,16 @@ class ProviderModelController extends Controller
             'model_key' => ['required', 'string', 'max:160'],
             'role' => ['nullable', 'string', 'max:80'],
             'context_window' => ['nullable', 'integer', 'min:1'],
+            'pricing' => ['nullable', 'json'],
             'is_enabled' => ['nullable', 'boolean'],
             'is_default' => ['nullable', 'boolean'],
         ]);
 
         return [
             ...$data,
+            'pricing' => $request->filled('pricing')
+                ? json_decode($data['pricing'], true, 512, JSON_THROW_ON_ERROR)
+                : null,
             'is_enabled' => $request->boolean('is_enabled'),
             'is_default' => $request->boolean('is_default'),
         ];

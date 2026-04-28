@@ -90,13 +90,13 @@
 - `app/Models/Provider.php`
   Provider records such as OpenRouter and Ollama.
 - `app/Models/ProviderModel.php`
-  Models available through each provider.
+  Models available through each provider, including pricing JSON for internal cost calculation.
 - `app/Models/FamilyAgent.php`
   Family-agent configuration, defaults, and compaction provider/model/prompt settings.
 - `app/Models/Thread.php`
   Thread metadata and token counters.
 - `app/Models/ThreadMessage.php`
-  Thread messages, command markers, and compaction flags.
+  Thread messages, command markers, compaction flags, and normalized usage metadata for token/cost analysis.
 - `app/Models/SitePage.php`
   CMS page records used for the public landing page and future site pages.
 - `app/Models/CustomerAccount.php`, `Plan.php`, `Subscription.php`, `ApiKey.php`

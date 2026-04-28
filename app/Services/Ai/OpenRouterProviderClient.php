@@ -50,11 +50,14 @@ class OpenRouterProviderClient implements ProviderClient
 
         $choice = $response['choices'][0] ?? [];
         $usage = $response['usage'] ?? [];
+        $normalizedUsage = $this->normalizeUsage($usage);
 
         return new AiResponse(
             content: (string) data_get($choice, 'message.content', ''),
-            inputTokens: (int) ($usage['prompt_tokens'] ?? 0),
-            outputTokens: (int) ($usage['completion_tokens'] ?? 0),
+            inputTokens: $normalizedUsage['prompt_tokens'],
+            outputTokens: $normalizedUsage['completion_tokens'],
+            usage: $normalizedUsage,
+            cost: $model->costForUsage($normalizedUsage),
             finishReason: $choice['finish_reason'] ?? null,
             metadata: $response,
         );
@@ -78,5 +81,42 @@ class OpenRouterProviderClient implements ProviderClient
         }
 
         return [$configuredValue, 'the provider record'];
+    }
+
+    /**
+     * @param array<string, mixed> $usage
+     * @return array{prompt_tokens: int, completion_tokens: int, prompt_cache_hit_tokens: int, prompt_cache_miss_tokens: int, reasoning_tokens: int}
+     */
+    private function normalizeUsage(array $usage): array
+    {
+        $promptTokens = (int) ($usage['prompt_tokens'] ?? 0);
+        $completionTokens = (int) ($usage['completion_tokens'] ?? 0);
+        $hasPromptCacheBreakdown = array_key_exists('prompt_cache_hit_tokens', $usage)
+            || array_key_exists('prompt_cache_miss_tokens', $usage)
+            || data_get($usage, 'prompt_tokens_details.cached_tokens') !== null;
+        $hasReasoningBreakdown = array_key_exists('reasoning_tokens', $usage)
+            || data_get($usage, 'completion_tokens_details.reasoning_tokens') !== null;
+        $promptCacheHitTokens = $hasPromptCacheBreakdown
+            ? (int) data_get($usage, 'prompt_cache_hit_tokens', data_get($usage, 'prompt_tokens_details.cached_tokens', 0))
+            : 0;
+        $promptCacheMissTokens = $hasPromptCacheBreakdown
+            ? data_get($usage, 'prompt_cache_miss_tokens')
+            : null;
+
+        if ($promptCacheMissTokens === null) {
+            $promptCacheMissTokens = max(0, $promptTokens - $promptCacheHitTokens);
+        }
+
+        return [
+            'prompt_tokens' => $promptTokens,
+            'completion_tokens' => $completionTokens,
+            'prompt_cache_hit_tokens' => $promptCacheHitTokens,
+            'prompt_cache_miss_tokens' => (int) $promptCacheMissTokens,
+            'reasoning_tokens' => $hasReasoningBreakdown
+                ? (int) data_get($usage, 'reasoning_tokens', data_get($usage, 'completion_tokens_details.reasoning_tokens', 0))
+                : 0,
+            'has_prompt_cache_breakdown' => $hasPromptCacheBreakdown,
+            'has_reasoning_breakdown' => $hasReasoningBreakdown,
+        ];
     }
 }

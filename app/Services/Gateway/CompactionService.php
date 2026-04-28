@@ -21,11 +21,6 @@ class CompactionService
     public function compact(Thread $thread, bool $force = false, array $overrides = []): CompactionResult
     {
         $family = $thread->familyAgent;
-        $total = $thread->input_tokens + $thread->output_tokens;
-
-        if (! $force && $total < $family->compaction_threshold_tokens) {
-            return new CompactionResult();
-        }
 
         $pendingMemoryMessages = $thread->messages()
             ->where('is_compacted', false)
@@ -44,6 +39,17 @@ class CompactionService
         $messagesForCompaction = $pendingMemoryMessages->concat($rawMessages);
 
         if ($rawMessages->isEmpty() || $messagesForCompaction->count() < 2) {
+            return new CompactionResult();
+        }
+
+        $activeContextTokens = $messagesForCompaction
+            ->sum(fn ($message) => $this->tokens->estimate($message->content));
+
+        if (filled($family->system_prompt)) {
+            $activeContextTokens += $this->tokens->estimate($family->system_prompt);
+        }
+
+        if (! $force && $activeContextTokens < $family->compaction_threshold_tokens) {
             return new CompactionResult();
         }
 
@@ -76,12 +82,14 @@ class CompactionService
                 'content' => $compactedContent,
                 'input_tokens' => $inputTokens,
                 'output_tokens' => $outputTokens,
+                'cost' => $response->cost,
                 'is_compacted' => false,
                 'is_memory' => true,
                 'metadata' => [
                     'generated_by' => 'ai_compaction_v1',
                     'raw_message_count' => $rawMessages->count(),
                     'pending_memory_count' => $pendingMemoryMessages->count(),
+                    'usage' => $response->usage,
                     'compaction_provider_id' => $compactionProvider?->id,
                     'compaction_provider' => $compactionProvider?->slug,
                     'compaction_provider_model_id' => $compactionModel?->id,

@@ -16,6 +16,9 @@
                 <div><label>Role</label><input name="role" type="text" value="{{ old('role', $model->role) }}"></div>
                 <div><label>Context window</label><input name="context_window" type="number" value="{{ old('context_window', $model->context_window) }}"></div>
             </div>
+            <label>Pricing JSON</label>
+            <textarea name="pricing" rows="8" placeholder='{"prompt_tokens": 0.000001, "completion_tokens": 0.000002, "prompt_cache_hit_tokens": 0.00000025, "prompt_cache_miss_tokens": 0.000001, "reasoning_tokens": 0.000003}'>{{ old('pricing', filled($model->pricing ?? null) ? json_encode($model->pricing, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : '') }}</textarea>
+            <p class="muted">Use the same usage field names returned by the API result. Leave blank to keep cost at zero.</p>
             <label><input name="is_enabled" type="checkbox" value="1" @checked(old('is_enabled', $model->is_enabled ?? true))> Enabled</label>
             <label><input name="is_default" type="checkbox" value="1" @checked(old('is_default', $model->is_default))> Default</label>
             <button class="button primary" type="submit">Save model</button>

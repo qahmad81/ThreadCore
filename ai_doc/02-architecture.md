@@ -16,7 +16,7 @@
 3. The gateway resolves the family, provider, model, and any optional inner provider.
 4. The system appends the standard request data and relevant conversation history.
 5. Token usage is estimated and checked against the internal subscription limits.
-6. If needed, the thread is compacted by collecting the latest non-compacted memory plus all eligible raw non-compacted messages in full, sending them to the resolved compaction provider/model with the family compaction prompt, storing the AI-generated compressed response as a new memory item, and marking only the older inputs so they are not resent.
+6. If needed, the thread is compacted by collecting the latest non-compacted memory plus all eligible raw non-compacted messages in full, sending them to the resolved compaction provider/model with the family compaction prompt, storing the AI-generated compressed response as a new memory item, and marking only the older inputs so they are not resent. Automatic compaction is gated by the active non-compacted context size, not the thread's cumulative lifetime token counters.
 7. The model response is returned with token metadata and the request is logged.
 
 ## Command Semantics
@@ -32,12 +32,14 @@
 - If the compaction provider returns empty content, the compaction run is rejected instead of persisting a raw-transcript fallback summary.
 - Compacted memory messages record the resolved compaction provider/model metadata for diagnostics, and forced `/dayend` logs should reflect the actual compaction route when one is used.
 - Forced `/dayend` compaction failures are returned as structured gateway errors instead of raw 500s.
+- Thread message accounting now includes a `cost` column. User turns stay at zero tokens/cost, and AI-generated turns or compacted memories copy cost from provider response metadata when available, otherwise they persist zero. The normalized usage breakdown is kept in message metadata so cache-hit, cache-miss, and reasoning token fields remain available for later analysis. Automatic compaction compares the current active non-compacted context against the family threshold, so a thread can compact again later without being permanently forced over threshold by its historical token totals.
 
 ## Provider Strategy
 - OpenRouter is the primary starting point for cloud AI.
 - Local providers such as Ollama should remain supported.
 - Additional providers are introduced through database records, not hardcoded routing.
 - Provider adapters normalize provider responses into content, token usage, finish reason, and raw metadata, and OpenRouter-compatible routes should raise explicit credential errors when the configured credential from either env or the provider record is missing or rejected.
+- Provider model pricing is stored as JSON on each `provider_models` row, using usage field names such as `prompt_tokens`, `completion_tokens`, `prompt_cache_hit_tokens`, `prompt_cache_miss_tokens`, and `reasoning_tokens` so internal cost calculation stays provider-agnostic. The cost calculator treats prompt cache and reasoning buckets as non-overlapping parts of the bill so totals are not counted twice.
 
 ## Design Direction
 - Keep the architecture fork-friendly.
