@@ -26,7 +26,7 @@
 - Forced `/dayend` compaction can use `provider` and `model` request overrides; automatic threshold compaction uses the family compaction settings.
 
 ## Compaction Settings
-- Each family agent can leave compaction provider/model blank to inherit the default provider/model, or override either value in admin.
+- Each family agent selects a default model and a compaction model in admin, and the provider is derived from the chosen model. The model pickers only show enabled models from enabled providers, while the underlying provider columns stay in sync for runtime routing even though they are not edited separately in the form.
 - Each family agent stores a compaction prompt; empty values resolve to `Compacted memory`.
 - Compaction sends the latest non-compacted memory together with the complete uncompressed raw message bundle to the resolved provider/model and stores the returned compressed text as the newest memory item.
 - If the compaction provider returns empty content, the compaction run is rejected instead of persisting a raw-transcript fallback summary.

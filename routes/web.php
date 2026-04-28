@@ -31,10 +31,16 @@ Route::post('/logout', [SessionController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware(['auth', 'admin'])->prefix(config('threadcore.admin.path'))->name('admin.')->group(function () {
-    Route::redirect('/', '/'.config('threadcore.admin.path').'/providers')->name('home');
+    Route::redirect('/', '/'.config('threadcore.admin.path').'/resource')->name('home');
+    Route::get('/resource', [ProviderController::class, 'index'])->name('resources.index');
     Route::resource('pages', SitePageController::class)->except('show');
-    Route::resource('providers', ProviderController::class)->except('show');
-    Route::resource('provider-models', ProviderModelController::class)->except('show');
+    Route::get('/providers', [ProviderController::class, 'index'])->name('providers.index');
+    Route::patch('/providers/{provider}/toggle-enabled', [ProviderController::class, 'toggleEnabled'])->name('providers.toggle-enabled');
+    Route::resource('providers', ProviderController::class)->except(['index', 'show']);
+    Route::get('/provider-models', fn () => redirect()->route('admin.resources.index'))->name('provider-models.index');
+    Route::patch('/provider-models/{providerModel}/toggle-enabled', [ProviderModelController::class, 'toggleEnabled'])->name('provider-models.toggle-enabled');
+    Route::resource('provider-models', ProviderModelController::class)->except(['index', 'show']);
+    Route::delete('/family-agents/{familyAgent}', [FamilyAgentController::class, 'destroy'])->name('family-agents.destroy');
     Route::resource('family-agents', FamilyAgentController::class)->except(['show', 'destroy']);
     Route::get('/customers', [CustomerAccountController::class, 'index'])->name('customers.index');
     Route::get('/api-keys', [AdminApiKeyController::class, 'index'])->name('api-keys.index');

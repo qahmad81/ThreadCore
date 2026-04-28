@@ -8,7 +8,7 @@ use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
-class OpenRouterProviderClient implements ProviderClient
+class OpenAiProviderClient implements ProviderClient
 {
     public function chat(Provider $provider, ProviderModel $model, array $messages, array $options = []): AiResponse
     {
@@ -18,7 +18,7 @@ class OpenRouterProviderClient implements ProviderClient
             $response = Http::withToken($apiKey)
                 ->acceptJson()
                 ->timeout(config('threadcore.gateway.timeout_seconds', 1200))
-                ->post(rtrim((string) $provider->base_url, '/').'/chat/completions', [
+                ->post(rtrim((string) $provider->base_url, '/').$this->chatPath(), [
                     'model' => $model->model_key,
                     'messages' => $messages,
                     'provider' => $options['inner_provider'] ?? null,
@@ -66,7 +66,7 @@ class OpenRouterProviderClient implements ProviderClient
     /**
      * @return array{0: string, 1: string}
      */
-    private function resolveApiKey(Provider $provider): array
+    protected function resolveApiKey(Provider $provider): array
     {
         $configuredValue = is_string($provider->api_key_env) ? trim($provider->api_key_env) : '';
 
@@ -85,9 +85,9 @@ class OpenRouterProviderClient implements ProviderClient
 
     /**
      * @param array<string, mixed> $usage
-     * @return array{prompt_tokens: int, completion_tokens: int, prompt_cache_hit_tokens: int, prompt_cache_miss_tokens: int, reasoning_tokens: int}
+     * @return array{prompt_tokens: int, completion_tokens: int, prompt_cache_hit_tokens: int, prompt_cache_miss_tokens: int, reasoning_tokens: int, has_prompt_cache_breakdown: bool, has_reasoning_breakdown: bool}
      */
-    private function normalizeUsage(array $usage): array
+    protected function normalizeUsage(array $usage): array
     {
         $promptTokens = (int) ($usage['prompt_tokens'] ?? 0);
         $completionTokens = (int) ($usage['completion_tokens'] ?? 0);
@@ -118,5 +118,10 @@ class OpenRouterProviderClient implements ProviderClient
             'has_prompt_cache_breakdown' => $hasPromptCacheBreakdown,
             'has_reasoning_breakdown' => $hasReasoningBreakdown,
         ];
+    }
+
+    protected function chatPath(): string
+    {
+        return '/chat/completions';
     }
 }

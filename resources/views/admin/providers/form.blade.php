@@ -1,4 +1,4 @@
-<x-layouts.app title="Provider - ThreadCore">
+<x-layouts.app title="Resource - ThreadCore">
     <main class="shell">
         @include('admin._chrome', ['title' => $provider->exists ? 'Edit Provider' : 'New Provider'])
 
@@ -20,7 +20,7 @@
                 <div>
                     <label>Driver</label>
                     <select name="driver" required>
-                        @foreach (['openrouter', 'ollama'] as $driver)
+                        @foreach (['openai', 'openrouter', 'google', 'anthropic', 'lmstudio', 'vllm', 'ollama'] as $driver)
                             <option value="{{ $driver }}" @selected(old('driver', $provider->driver) === $driver)>{{ $driver }}</option>
                         @endforeach
                     </select>
@@ -37,7 +37,17 @@
             <label><input name="is_enabled" type="checkbox" value="1" @checked(old('is_enabled', $provider->is_enabled ?? true))> Enabled</label>
             <label><input name="is_default" type="checkbox" value="1" @checked(old('is_default', $provider->is_default))> Default</label>
 
-            <button class="button primary" type="submit">Save provider</button>
+            <div class="actions" style="margin-top: 18px;">
+                <button class="button primary" type="submit">Save provider</button>
+                <a class="button" href="{{ route('admin.resources.index') }}">Back</a>
+            </div>
         </form>
+        @if ($provider->exists)
+            <form method="POST" action="{{ route('admin.providers.destroy', $provider) }}" style="margin-top: 12px;">
+                @csrf
+                @method('DELETE')
+                <button class="button danger" type="submit">Delete</button>
+            </form>
+        @endif
     </main>
 </x-layouts.app>

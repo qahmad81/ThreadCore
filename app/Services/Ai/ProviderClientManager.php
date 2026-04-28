@@ -8,7 +8,11 @@ use InvalidArgumentException;
 class ProviderClientManager
 {
     public function __construct(
-        private readonly OpenRouterProviderClient $openRouter,
+        private readonly OpenAiProviderClient $openAi,
+        private readonly GoogleProviderClient $google,
+        private readonly AnthropicProviderClient $anthropic,
+        private readonly LmstudioProviderClient $lmstudio,
+        private readonly VllmProviderClient $vllm,
         private readonly OllamaProviderClient $ollama,
     ) {
     }
@@ -16,7 +20,11 @@ class ProviderClientManager
     public function forProvider(Provider $provider): ProviderClient
     {
         return match ($provider->driver) {
-            'openrouter' => $this->openRouter,
+            'openai', 'openrouter' => $this->openAi,
+            'google' => $this->google,
+            'anthropic' => $this->anthropic,
+            'lmstudio' => $this->lmstudio,
+            'vllm' => $this->vllm,
             'ollama' => $this->ollama,
             default => throw new InvalidArgumentException("Unsupported provider driver [{$provider->driver}]."),
         };

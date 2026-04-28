@@ -124,7 +124,9 @@ class CompactionService
             $provider = Provider::query()->where('slug', $overrides['provider'])->where('is_enabled', true)->first();
         }
 
+        $provider ??= $family->compactionProviderModel?->provider;
         $provider ??= $family->compactionProvider;
+        $provider ??= $family->defaultProviderModel?->provider;
         $provider ??= $family->defaultProvider;
         $provider ??= Provider::query()->where('is_default', true)->where('is_enabled', true)->first();
         $provider ??= Provider::query()->where('is_enabled', true)->first();
@@ -145,7 +147,15 @@ class CompactionService
             $model ??= $family->compactionProviderModel;
         }
 
+        if ($family->compaction_provider_model_id && ! $family->compactionProviderModel?->provider_id && $family->compactionProviderModel?->provider) {
+            $model ??= $family->compactionProviderModel;
+        }
+
         if ($family->default_provider_model_id && $family->defaultProviderModel?->provider_id === $provider->id) {
+            $model ??= $family->defaultProviderModel;
+        }
+
+        if ($family->default_provider_model_id && ! $family->defaultProviderModel?->provider_id && $family->defaultProviderModel?->provider) {
             $model ??= $family->defaultProviderModel;
         }
 

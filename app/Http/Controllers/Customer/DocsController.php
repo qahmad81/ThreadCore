@@ -25,7 +25,7 @@ class DocsController extends Controller
             'recentThreadCount' => $account->threads()->count(),
             'familyAgents' => \App\Models\FamilyAgent::query()
                 ->where('is_enabled', true)
-                ->with(['defaultProvider', 'defaultProviderModel'])
+                ->with(['defaultProvider', 'defaultProviderModel.provider'])
                 ->orderBy('number')
                 ->get(),
         ]);

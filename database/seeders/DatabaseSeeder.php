@@ -77,7 +77,7 @@ class DatabaseSeeder extends Seeder
             ['slug' => 'openrouter'],
             [
                 'name' => 'OpenRouter',
-                'driver' => 'openrouter',
+                'driver' => 'openai',
                 'base_url' => config('threadcore.openrouter.base_url'),
                 'api_key_env' => 'OPENROUTER_API_KEY',
                 'is_enabled' => true,

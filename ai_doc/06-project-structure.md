@@ -63,14 +63,18 @@
   Account and subscription notes.
 - `docs/README.md`
   Human-facing introduction to the docs folder.
+- `docs/providers.md`
+  Provider registry notes for OpenAI, DeepSeek, Gemini, and Novita.
+- `docs/models.md`
+  Provider-grouped model catalog with representative model codes, roles, context windows, and normalized pricing JSON.
 
 ## Implemented Application Structure
 - `app/Http/Controllers/Auth/SessionController.php`
   Basic local session login/logout.
 - `app/Http/Controllers/Admin/ProviderController.php`
-  Provider CRUD.
+  Provider CRUD and the unified admin resource index.
 - `app/Http/Controllers/Admin/ProviderModelController.php`
-  Provider model CRUD.
+  Provider model CRUD, including inline enable/disable support for the unified resource screen.
 - `app/Http/Controllers/Admin/FamilyAgentController.php`
   Family-agent CRUD.
 - `app/Http/Controllers/Admin/ApiKeyController.php`
@@ -104,7 +108,7 @@
 - `app/Models/GatewayRequestLog.php`
   Gateway request and provider response metadata.
 - `app/Services/Ai/`
-  Provider clients and normalized AI responses.
+  Provider clients and normalized AI responses, including the generic OpenAI-compatible client plus Anthropic, Google, LM Studio, vLLM, and Ollama adapters.
 - `app/Services/Gateway/`
   Provider resolution, history building, command parsing, compaction, limits, and token estimation.
 - `app/Services/Gateway/ThreadMarkdownExporter.php`

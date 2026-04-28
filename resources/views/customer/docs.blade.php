@@ -67,7 +67,7 @@
                                 <td><strong>{{ $family->name }}</strong></td>
                                 <td><code>{{ $family->number }}</code></td>
                                 <td>{{ $family->description ?: 'No description set' }}</td>
-                                <td>{{ $family->defaultProvider?->name ?? 'None' }} / {{ $family->defaultProviderModel?->model_key ?? 'None' }}</td>
+                                <td>{{ $family->defaultProvider?->name ?? $family->defaultProviderModel?->provider?->name ?? 'None' }} / {{ $family->defaultProviderModel?->model_key ?? 'None' }}</td>
                                 <td>{{ number_format($family->max_context_tokens) }}</td>
                             </tr>
                         @endforeach

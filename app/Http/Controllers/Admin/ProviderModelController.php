@@ -5,17 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Provider;
 use App\Models\ProviderModel;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProviderModelController extends Controller
 {
-    public function index(): View
+    public function index(): RedirectResponse
     {
-        return view('admin.provider-models.index', [
-            'models' => ProviderModel::query()->with('provider')->orderBy('provider_id')->orderBy('role')->get(),
-        ]);
+        return redirect()->route('admin.resources.index');
     }
 
     public function create(): View
@@ -25,9 +26,19 @@ class ProviderModelController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        ProviderModel::query()->create($this->validated($request));
+        try {
+            ProviderModel::query()->create($this->validated($request));
+        } catch (QueryException $exception) {
+            if (! $this->isDuplicateKeyException($exception)) {
+                throw $exception;
+            }
 
-        return redirect()->route('admin.provider-models.index')->with('status', 'Model created.');
+            throw ValidationException::withMessages([
+                'model_key' => 'A model with this key already exists for the selected provider.',
+            ]);
+        }
+
+        return redirect()->route('admin.resources.index')->with('status', 'Model created.');
     }
 
     public function edit(ProviderModel $providerModel): View
@@ -37,9 +48,29 @@ class ProviderModelController extends Controller
 
     public function update(Request $request, ProviderModel $providerModel): RedirectResponse
     {
-        $providerModel->update($this->validated($request));
+        try {
+            $providerModel->update($this->validated($request, $providerModel));
+        } catch (QueryException $exception) {
+            if (! $this->isDuplicateKeyException($exception)) {
+                throw $exception;
+            }
 
-        return redirect()->route('admin.provider-models.index')->with('status', 'Model updated.');
+            throw ValidationException::withMessages([
+                'model_key' => 'A model with this key already exists for the selected provider.',
+            ]);
+        }
+
+        return redirect()->route('admin.resources.index')->with('status', 'Model updated.');
+    }
+
+    public function toggleEnabled(ProviderModel $providerModel): RedirectResponse
+    {
+        $providerModel->update([
+            'is_enabled' => ! $providerModel->is_enabled,
+        ]);
+
+        return redirect()->route('admin.resources.index')
+            ->with('status', $providerModel->is_enabled ? 'Model enabled.' : 'Model disabled.');
     }
 
     public function destroy(ProviderModel $providerModel): RedirectResponse
@@ -50,7 +81,7 @@ class ProviderModelController extends Controller
 
         $providerModel->delete();
 
-        return redirect()->route('admin.provider-models.index')->with('status', 'Model deleted.');
+        return redirect()->route('admin.resources.index')->with('status', 'Model deleted.');
     }
 
     private function formData(ProviderModel $model): array
@@ -61,12 +92,19 @@ class ProviderModelController extends Controller
         ];
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request, ?ProviderModel $model = null): array
     {
         $data = $request->validate([
             'provider_id' => ['required', 'exists:providers,id'],
             'name' => ['required', 'string', 'max:120'],
-            'model_key' => ['required', 'string', 'max:160'],
+            'model_key' => [
+                'required',
+                'string',
+                'max:160',
+                Rule::unique('provider_models', 'model_key')
+                    ->where(fn ($query) => $query->where('provider_id', $request->input('provider_id')))
+                    ->ignore($model?->id),
+            ],
             'role' => ['nullable', 'string', 'max:80'],
             'context_window' => ['nullable', 'integer', 'min:1'],
             'pricing' => ['nullable', 'json'],
@@ -82,5 +120,10 @@ class ProviderModelController extends Controller
             'is_enabled' => $request->boolean('is_enabled'),
             'is_default' => $request->boolean('is_default'),
         ];
+    }
+
+    private function isDuplicateKeyException(QueryException $exception): bool
+    {
+        return (string) ($exception->errorInfo[1] ?? '') === '1062';
     }
 }

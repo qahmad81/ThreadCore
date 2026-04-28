@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Provider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ProviderController extends Controller
@@ -16,6 +17,7 @@ class ProviderController extends Controller
             'providers' => Provider::query()
                 ->with('models')
                 ->orderByDesc('is_default')
+                ->orderByDesc('is_enabled')
                 ->orderBy('name')
                 ->get(),
         ]);
@@ -30,7 +32,7 @@ class ProviderController extends Controller
     {
         Provider::query()->create($this->validated($request));
 
-        return redirect()->route('admin.providers.index')->with('status', 'Provider created.');
+        return redirect()->route('admin.resources.index')->with('status', 'Provider created.');
     }
 
     public function edit(Provider $provider): View
@@ -42,18 +44,27 @@ class ProviderController extends Controller
     {
         $provider->update($this->validated($request));
 
-        return redirect()->route('admin.providers.index')->with('status', 'Provider updated.');
+        return redirect()->route('admin.resources.index')->with('status', 'Provider updated.');
+    }
+
+    public function toggleEnabled(Provider $provider): RedirectResponse
+    {
+        $provider->update([
+            'is_enabled' => ! $provider->is_enabled,
+        ]);
+
+        return redirect()->route('admin.resources.index')
+            ->with('status', $provider->is_enabled ? 'Provider enabled.' : 'Provider disabled.');
     }
 
     public function destroy(Provider $provider): RedirectResponse
     {
-        if ($provider->models()->exists()) {
-            return back()->withErrors(['provider' => 'Disable providers that still have models instead of deleting them.']);
-        }
+        DB::transaction(function () use ($provider): void {
+            $provider->models()->delete();
+            $provider->delete();
+        });
 
-        $provider->delete();
-
-        return redirect()->route('admin.providers.index')->with('status', 'Provider deleted.');
+        return redirect()->route('admin.resources.index')->with('status', 'Provider deleted.');
     }
 
     private function validated(Request $request): array
@@ -61,7 +72,7 @@ class ProviderController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'slug' => ['required', 'string', 'max:80'],
-            'driver' => ['required', 'in:openrouter,ollama'],
+            'driver' => ['required', 'in:openai,openrouter,google,anthropic,lmstudio,vllm,ollama'],
             'base_url' => ['nullable', 'url'],
             'api_key_env' => ['nullable', 'string', 'max:120'],
             'is_enabled' => ['nullable', 'boolean'],

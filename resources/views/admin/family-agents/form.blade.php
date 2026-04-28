@@ -14,33 +14,11 @@
             <textarea name="system_prompt">{{ old('system_prompt', $family->system_prompt) }}</textarea>
             <div class="grid two">
                 <div>
-                    <label>Default provider</label>
-                    <select name="default_provider_id">
-                        <option value="">None</option>
-                        @foreach ($providers as $provider)
-                            <option value="{{ $provider->id }}" @selected(old('default_provider_id', $family->default_provider_id) == $provider->id)>{{ $provider->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
                     <label>Default model</label>
                     <select name="default_provider_model_id">
                         <option value="">None</option>
                         @foreach ($models as $model)
                             <option value="{{ $model->id }}" @selected(old('default_provider_model_id', $family->default_provider_model_id) == $model->id)>{{ $model->provider?->name }} / {{ $model->model_key }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div><label>Max context tokens</label><input name="max_context_tokens" type="number" value="{{ old('max_context_tokens', $family->max_context_tokens ?: 8192) }}" required></div>
-                <div><label>Compaction threshold</label><input name="compaction_threshold_tokens" type="number" value="{{ old('compaction_threshold_tokens', $family->compaction_threshold_tokens ?: 7000) }}" required></div>
-            </div>
-            <div class="grid two">
-                <div>
-                    <label>Compaction provider</label>
-                    <select name="compaction_provider_id">
-                        <option value="">Default provider</option>
-                        @foreach ($providers as $provider)
-                            <option value="{{ $provider->id }}" @selected(old('compaction_provider_id', $family->compaction_provider_id) == $provider->id)>{{ $provider->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -53,6 +31,10 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
+            <div class="grid two">
+                <div><label>Max context tokens</label><input name="max_context_tokens" type="number" value="{{ old('max_context_tokens', $family->max_context_tokens ?: 8192) }}" required></div>
+                <div><label>Compaction threshold</label><input name="compaction_threshold_tokens" type="number" value="{{ old('compaction_threshold_tokens', $family->compaction_threshold_tokens ?: 7000) }}" required></div>
             </div>
             <label>Compaction prompt</label>
             <textarea name="compaction_prompt" placeholder="Compacted memory">{{ old('compaction_prompt', $family->compaction_prompt ?: 'Compacted memory') }}</textarea>

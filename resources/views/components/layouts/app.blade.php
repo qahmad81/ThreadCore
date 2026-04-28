@@ -66,9 +66,45 @@
         .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .provider { padding: 18px; }
         .provider-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+        .provider-toggle {
+            align-items: center;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--ink);
+            cursor: pointer;
+            display: inline-flex;
+            font: inherit;
+            font-size: 18px;
+            height: 34px;
+            justify-content: center;
+            line-height: 1;
+            width: 34px;
+        }
+        .provider-toggle[aria-expanded="true"] {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .provider-models {
+            overflow: hidden;
+            transition: max-height 220ms ease, opacity 220ms ease, transform 220ms ease;
+            will-change: max-height;
+        }
+        .provider-models[hidden] {
+            display: block;
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-4px);
+            pointer-events: none;
+        }
+        .provider-models-inner {
+            padding-top: 4px;
+        }
         .provider h2 { font-size: 18px; margin: 0 0 4px; }
         .badge { border: 1px solid var(--line); border-radius: 999px; color: var(--muted); display: inline-flex; font-size: 12px; padding: 4px 9px; }
         .badge.ok { border-color: #bbf7d0; color: var(--ok); background: #f0fdf4; }
+        .badge.warn { border-color: #f3c1cf; color: #b42318; background: #fff1f3; }
         table { border-collapse: collapse; width: 100%; }
         th, td { border-top: 1px solid var(--line); padding: 10px 0; text-align: left; vertical-align: top; }
         th { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; }
@@ -292,5 +328,20 @@
 </head>
 <body>
     {{ $slot }}
+    <script>
+        (() => {
+            document.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) return;
+
+                const message = form.getAttribute('data-confirm');
+                if (!message) return;
+
+                if (!window.confirm(message)) {
+                    event.preventDefault();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

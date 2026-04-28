@@ -22,8 +22,10 @@ Laravel v1 microsaas implementation and hardening.
 - The admin URL prefix is configurable through `THREADCORE_ADMIN_PATH`; it currently remains `admin`.
 - Admin routes require both `auth` and an `admin` middleware check.
 - `/admin/providers` shows seeded provider records for authenticated users.
-- Admin CRUD exists for CMS pages, providers, provider models, and family agents.
-- Family agent admin forms now include an optional description field plus compaction provider/model/prompt settings.
+- Admin CRUD exists for CMS pages, providers, provider models, and family agents, and destructive admin deletes now use an explicit confirmation prompt before submission. Deleting a provider now also deletes its models.
+- Provider model create/update now guard duplicate provider/model keys and surface validation errors instead of a raw database exception.
+- Provider model keys are unique per provider, not globally across the whole registry.
+- Family agent admin forms now include an optional description field plus default/compaction model and prompt settings, and the provider is derived from the chosen model instead of being entered separately. Those model pickers only show enabled models from enabled providers.
 - Admin threads now have a list view action and a conversation detail page that shows thread metadata and saved messages.
 - Admin and customer thread detail pages now include a Markdown export action for the full conversation.
 - Thread Markdown exports now use a simple plain-text-friendly structure without per-message metadata or fenced code blocks.
@@ -38,14 +40,16 @@ Laravel v1 microsaas implementation and hardening.
 - Customer login redirects to `/customer/dashboard`; admin login redirects to the configured admin area.
 - Customer accounts, internal plans/subscriptions, API keys, gateway logs, and request usage counters exist.
 - Gateway endpoints exist at `/api/v1/threads` and `/api/v1/threads/{public_id}/messages`.
-- Gateway API key auth, provider resolution, OpenRouter/Ollama adapters, token estimation, compaction, and command handling exist.
-- OpenRouter-compatible providers can now authenticate from either an env-backed provider field value or a direct token stored in the provider record itself.
+- Gateway API key auth, provider resolution, OpenAI-compatible, Anthropic, Google, LM Studio, vLLM, and Ollama adapters, token estimation, compaction, and command handling exist.
+- OpenRouter-compatible providers can now authenticate from either an env-backed provider field value or a direct token stored in the provider record itself, and the generic OpenAI driver now also backs Google, LM Studio, and vLLM provider records while Anthropic uses its own adapter.
 - Compaction now sends the latest non-compacted memory plus every eligible raw non-compacted message in full to the resolved compaction provider/model, stores the AI-generated compressed response as the new memory message, marks only the older memory/raw inputs compacted, and leaves the newest memory item non-compacted for the next cycle. Automatic compaction uses the estimated active non-compacted context size, so historical thread totals do not keep triggering compaction after the first threshold crossing.
 - Compaction now rejects empty provider summaries instead of falling back to a raw-transcript memory item, and forced `/dayend` compaction failures return a structured gateway error instead of a raw 500.
 - Compaction writes are now wrapped in a database transaction so provider failures or later persistence errors do not leave partial compacted state behind, successful compaction runs are counted against usage, and forced dayend logs record the resolved compaction provider/model when one is used.
 - Thread messages now persist a `cost` field alongside token counts; user turns remain zeroed, while AI-generated turns and compacted memories compute cost from JSON pricing stored on provider models and normalized usage fields. The normalized usage breakdown stays in message metadata for later analysis, and cache/reasoning buckets are treated as non-overlapping parts of the final bill.
+- Provider models now include a dedicated `pricing` JSON column, which the documented model registry seeds directly and the cost calculator reads at runtime.
 - Gateway/provider requests default to a 20 minute timeout via `THREADCORE_GATEWAY_TIMEOUT_SECONDS=1200`.
 - OpenRouter-compatible providers now fail fast with clearer credential errors if the configured credential source is empty or the remote provider rejects that key, and failed first-turn requests no longer leave empty threads behind.
+- A new human-facing provider registry now exists at `docs/providers.md`, listing provider name, slug, driver, and base URL for OpenRouter, OpenAI, Anthropic, Google Gemini, Alibaba, Arcee, Cerebras, Chutes, Cohere, DeepSeek, Fireworks, Groq, Hugging Face, Kilo Gateway, LM Studio, Mistral, MiniMax, Moonshot, NVIDIA, Novita, Ollama, Perplexity, Qwen, Together, Venice, Vercel AI Gateway, vLLM, xAI, Xiaomi, and Z.AI.
 - Feature and unit tests cover the landing page, CMS updates, configurable admin path, auth, role-aware login redirects, admin guard, customer profile/password updates, customer API keys, gateway thread/message flow, commands, and resolver precedence.
 - Tests also cover public CMS slugs, unpublished page 404s, reserved CMS slugs, and catch-all route regressions.
 
@@ -89,6 +93,8 @@ Laravel v1 microsaas implementation and hardening.
 - Locked the admin area behind an `is_admin` check and made the admin bootstrap password explicit.
 - Implemented the remaining v1 plan: CMS/admin/customer UI, internal billing records, API keys, gateway endpoints, live provider adapters, request logs, command handling, and tests.
 - Added configurable family-agent compaction provider/model/prompt settings, removed local message count/content truncation from compaction, and routed compaction through the selected AI provider/model.
+- Added `docs/models.md` as a provider-grouped model catalog with representative model codes, roles, context windows, and normalized pricing JSON.
+- Added a dedicated migration seed that imports the documented provider and model registries into `providers` and `provider_models` for new databases.
 
 ## What Still Needs To Be Done
 - Manually verify live OpenRouter and Ollama calls when the user wants to spend provider credits or has Ollama running.

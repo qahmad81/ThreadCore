@@ -23,6 +23,7 @@ class ProviderResolver
             $provider ??= $thread->provider;
         }
 
+        $provider ??= $familyAgent->defaultProviderModel?->provider;
         $provider ??= $familyAgent->defaultProvider;
         $provider ??= Provider::query()->where('is_default', true)->where('is_enabled', true)->first();
         $provider ??= Provider::query()->where('is_enabled', true)->first();
@@ -44,6 +45,10 @@ class ProviderResolver
         }
 
         if ($familyAgent->default_provider_model_id && $familyAgent->defaultProviderModel?->provider_id === $provider->id) {
+            $model ??= $familyAgent->defaultProviderModel;
+        }
+
+        if ($familyAgent->default_provider_model_id && ! $familyAgent->defaultProviderModel?->provider_id && $familyAgent->defaultProviderModel?->provider) {
             $model ??= $familyAgent->defaultProviderModel;
         }
 

@@ -1,4 +1,4 @@
-<x-layouts.app title="Model - ThreadCore">
+<x-layouts.app title="Resource - ThreadCore">
     <main class="shell">
         @include('admin._chrome', ['title' => $model->exists ? 'Edit Model' : 'New Model'])
         <form class="panel panel-pad" method="POST" action="{{ $model->exists ? route('admin.provider-models.update', $model) : route('admin.provider-models.store') }}">
@@ -21,7 +21,10 @@
             <p class="muted">Use the same usage field names returned by the API result. Leave blank to keep cost at zero.</p>
             <label><input name="is_enabled" type="checkbox" value="1" @checked(old('is_enabled', $model->is_enabled ?? true))> Enabled</label>
             <label><input name="is_default" type="checkbox" value="1" @checked(old('is_default', $model->is_default))> Default</label>
-            <button class="button primary" type="submit">Save model</button>
+            <div class="actions" style="margin-top: 18px;">
+                <button class="button primary" type="submit">Save model</button>
+                <a class="button" href="{{ route('admin.resources.index') }}">Back</a>
+            </div>
         </form>
     </main>
 </x-layouts.app>

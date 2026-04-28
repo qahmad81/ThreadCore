@@ -395,6 +395,8 @@ class GatewayApiTest extends TestCase
             'prompt_cache_hit_tokens' => 0,
             'prompt_cache_miss_tokens' => 120,
             'reasoning_tokens' => 0,
+            'has_prompt_cache_breakdown' => false,
+            'has_reasoning_breakdown' => false,
         ], $memory->metadata['usage']);
         $this->assertSame(13, $memory->metadata['raw_message_count']);
         $this->assertSame('ai_compaction_v1', $memory->metadata['generated_by']);
