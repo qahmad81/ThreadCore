@@ -53,6 +53,7 @@ Laravel v1 microsaas implementation and hardening.
 - Feature and unit tests cover the landing page, CMS updates, configurable admin path, auth, role-aware login redirects, admin guard, customer profile/password updates, customer API keys, gateway thread/message flow, commands, and resolver precedence.
 - Tests also cover public CMS slugs, unpublished page 404s, reserved CMS slugs, and catch-all route regressions.
 - The root `README.md` now describes ThreadCore directly instead of the default Laravel skeleton, including product scope, setup, gateway examples, local access, provider resources, and documentation links.
+- Public-facing docs and CLI references now use environment-agnostic PHP 8.3+ command examples instead of workstation-specific runtime paths.
 
 ## Current Verified State
 - The project now has runnable Laravel code.

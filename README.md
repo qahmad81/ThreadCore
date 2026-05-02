@@ -76,7 +76,7 @@ Authorization: Bearer tc_live_your_key
 ### Create A Thread
 
 ```bash
-curl -X POST http://localhost:3185/api/v1/threads \
+curl -X POST http://your-app.test/api/v1/threads \
   -H "Authorization: Bearer tc_live_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -88,7 +88,7 @@ curl -X POST http://localhost:3185/api/v1/threads \
 ### Post A Message
 
 ```bash
-curl -X POST http://localhost:3185/api/v1/threads/{thread_id}/messages \
+curl -X POST http://your-app.test/api/v1/threads/{thread_id}/messages \
   -H "Authorization: Bearer tc_live_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -141,52 +141,47 @@ npm run build
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
-php artisan serve --host=127.0.0.1 --port=3185
+php artisan serve
 ```
 
-Local workspace note: this repository has been developed with PHP `8.3.12` under MAMP. If your default `php` points to an older runtime, run Artisan with the explicit PHP 8.3 binary.
+Runtime requirements:
 
-```powershell
-& 'C:\MAMP\bin\php\php8.3.12\php.exe' artisan test
-```
+- PHP 8.3 or newer
+- Composer
+- MySQL
+- Node.js and npm
 
 ## Key Environment Values
 
 Set these in `.env` for local development:
 
 ```env
-APP_URL=http://127.0.0.1:3185
-THREADCORE_ADMIN_PATH=admin
+APP_URL=http://your-app.test
+THREADCORE_ADMIN_PATH=admin-path
 THREADCORE_ADMIN_PASSWORD=your_admin_password
-THREADCORE_DEMO_CUSTOMER_EMAIL=customer@threadcore.local
-THREADCORE_DEMO_CUSTOMER_PASSWORD=password
+THREADCORE_DEMO_CUSTOMER_EMAIL=demo@example.com
+THREADCORE_DEMO_CUSTOMER_PASSWORD=your_demo_password
 THREADCORE_GATEWAY_TIMEOUT_SECONDS=1200
 ```
 
 Provider credentials may be stored as environment variable names or direct provider-record values depending on how the provider is configured in admin.
 
-## Local Access
+## Seeded Access
 
-Admin:
+The seeder creates:
 
-- URL: `/admin` by default, or the value of `THREADCORE_ADMIN_PATH`
-- Email: `admin@threadcore.local`
-- Password: `THREADCORE_ADMIN_PASSWORD`
-
-Demo customer:
-
-- URL: `/customer/dashboard`
-- Email: `customer@threadcore.local`
-- Password: `THREADCORE_DEMO_CUSTOMER_PASSWORD`, falling back to `password` when unset
+- An admin account using the credential values provided through environment variables
+- A demo customer account using the configured demo email and password values
+- A default family agent, starter plan, subscription, provider records, provider models, and landing page content
 
 ## Useful Commands
 
-```powershell
-& 'C:\MAMP\bin\php\php8.3.12\php.exe' composer.phar install
-& 'C:\MAMP\bin\php\php8.3.12\php.exe' artisan migrate --seed
-& 'C:\MAMP\bin\php\php8.3.12\php.exe' artisan route:list
-& 'C:\MAMP\bin\php\php8.3.12\php.exe' artisan test
-& 'C:\MAMP\bin\php\php8.3.12\php.exe' artisan serve --host=127.0.0.1 --port=3185
+```bash
+composer install
+php artisan migrate --seed
+php artisan route:list
+php artisan test
+php artisan serve
 ```
 
 ## Documentation
@@ -202,8 +197,8 @@ Demo customer:
 
 Run the test suite:
 
-```powershell
-& 'C:\MAMP\bin\php\php8.3.12\php.exe' artisan test
+```bash
+php artisan test
 ```
 
 The suite currently covers admin access, resources, family agents, customer pages, API keys, CMS pages, gateway behavior, commands, provider resolution, pricing, compaction, and thread exports.

@@ -14,7 +14,7 @@ API keys are hashed in the database and plain tokens are only shown once after c
 ## Create Thread
 
 ```bash
-curl -X POST http://localhost:3185/api/v1/threads \
+curl -X POST http://your-app.test/api/v1/threads \
   -H "Authorization: Bearer tc_live_your_key" \
   -H "Content-Type: application/json" \
   -d '{"family_agent":"default","content":"Hello ThreadCore"}'
@@ -23,7 +23,7 @@ curl -X POST http://localhost:3185/api/v1/threads \
 ## Post Message
 
 ```bash
-curl -X POST http://localhost:3185/api/v1/threads/{thread_id}/messages \
+curl -X POST http://your-app.test/api/v1/threads/{thread_id}/messages \
   -H "Authorization: Bearer tc_live_your_key" \
   -H "Content-Type: application/json" \
   -d '{"content":"Continue the conversation"}'
