@@ -52,6 +52,7 @@ Laravel v1 microsaas implementation and hardening.
 - A new human-facing provider registry now exists at `docs/providers.md`, listing provider name, slug, driver, and base URL for OpenRouter, OpenAI, Anthropic, Google Gemini, Alibaba, Arcee, Cerebras, Chutes, Cohere, DeepSeek, Fireworks, Groq, Hugging Face, Kilo Gateway, LM Studio, Mistral, MiniMax, Moonshot, NVIDIA, Novita, Ollama, Perplexity, Qwen, Together, Venice, Vercel AI Gateway, vLLM, xAI, Xiaomi, and Z.AI.
 - Feature and unit tests cover the landing page, CMS updates, configurable admin path, auth, role-aware login redirects, admin guard, customer profile/password updates, customer API keys, gateway thread/message flow, commands, and resolver precedence.
 - Tests also cover public CMS slugs, unpublished page 404s, reserved CMS slugs, and catch-all route regressions.
+- The root `README.md` now describes ThreadCore directly instead of the default Laravel skeleton, including product scope, setup, gateway examples, local access, provider resources, and documentation links.
 
 ## Current Verified State
 - The project now has runnable Laravel code.
@@ -95,6 +96,7 @@ Laravel v1 microsaas implementation and hardening.
 - Added configurable family-agent compaction provider/model/prompt settings, removed local message count/content truncation from compaction, and routed compaction through the selected AI provider/model.
 - Added `docs/models.md` as a provider-grouped model catalog with representative model codes, roles, context windows, and normalized pricing JSON.
 - Added a dedicated migration seed that imports the documented provider and model registries into `providers` and `provider_models` for new databases.
+- Replaced the default Laravel `README.md` with a project-specific repository landing page for ThreadCore.
 
 ## What Still Needs To Be Done
 - Manually verify live OpenRouter and Ollama calls when the user wants to spend provider credits or has Ollama running.

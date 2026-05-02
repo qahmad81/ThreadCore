@@ -3,6 +3,8 @@
 ## Root
 - `AGENTS.md`
   Root entry contract for agents working in this workspace.
+- `README.md`
+  Public repository landing page for ThreadCore, including product scope, setup, gateway examples, local access, and documentation links.
 - `app/`
   Laravel application code, including models and HTTP controllers.
 - `ai_doc/`
@@ -64,7 +66,7 @@
 - `docs/README.md`
   Human-facing introduction to the docs folder.
 - `docs/providers.md`
-  Provider registry notes for OpenAI, DeepSeek, Gemini, and Novita.
+  Provider registry notes with provider names, slugs, drivers, and base URLs.
 - `docs/models.md`
   Provider-grouped model catalog with representative model codes, roles, context windows, and normalized pricing JSON.
 

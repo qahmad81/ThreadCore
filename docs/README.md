@@ -3,6 +3,7 @@
 This folder now contains the human-facing support documents for ThreadCore.
 
 ## Purpose
+- Support the root [README.md](../README.md) with deeper operational notes
 - Keep account and subscription notes available for humans
 - Track public site/CMS notes as the app grows
 - Provide a small entry point into the project documentation

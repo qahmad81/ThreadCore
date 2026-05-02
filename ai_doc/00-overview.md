@@ -4,7 +4,7 @@
 Build ThreadCore as a Laravel-based microsaas for AI thread orchestration, provider management, and API gateway usage.
 
 ## Current Scope
-Laravel skeleton and the first admin/provider verification slice are now implemented. Gateway behavior, customer API keys, billing, and provider adapters remain upcoming work.
+ThreadCore is now an operational Laravel 12 microsaas slice with admin resources, customer dashboards, API keys, provider/model registries, gateway endpoints, provider adapters, token/cost tracking, and AI-backed memory compaction. The remaining work is hardening, polish, production deployment preparation, and live provider verification.
 
 ## Product Principles
 - Keep the project English-first for app-facing assets and documentation.
@@ -13,4 +13,4 @@ Laravel skeleton and the first admin/provider verification slice are now impleme
 - Keep token accounting and memory compaction as first-class product behavior.
 
 ## Current Status
-The project began from a seed note, gained a clean documentation base, and now has a Laravel 12 application skeleton with seeded provider records.
+The project began from a seed note, gained a clean documentation base, and now has a working Laravel 12 application with CMS-backed public pages, admin and customer surfaces, resource management, gateway runtime behavior, and a project-specific root README replacing the default Laravel page.
