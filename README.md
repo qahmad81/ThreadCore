@@ -5,6 +5,7 @@ ThreadCore is a Laravel-based microsaas for AI thread orchestration, provider ro
 It gives teams one gateway for creating AI conversations, routing them through configurable provider/model resources, tracking usage and cost, compacting long-running context into memory, and exposing a customer-facing API key workflow.
 
 > Built as an AI-assisted product by Ahmad Odeh with Codex as the primary implementation agent.
+
 ![Tests Passing](https://img.shields.io/badge/tests-passing-brightgreen)
 
 ## What It Does
