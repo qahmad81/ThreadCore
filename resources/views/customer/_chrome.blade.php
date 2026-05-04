@@ -2,8 +2,13 @@
 
 <header class="topbar">
     <div class="brand">
-        <strong>{{ $title }}</strong>
-        <span>Customer workspace</span>
+        <div class="brand-lockup">
+            <img class="brand-mark" src="/icons/logo/apple-touch-icon.png" alt="ThreadCore customer icon">
+            <div class="brand-copy">
+                <strong>{{ $title }}</strong>
+                <span>Customer workspace</span>
+            </div>
+        </div>
         @include('customer._nav')
     </div>
 

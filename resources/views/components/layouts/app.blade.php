@@ -4,6 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? config('app.name', 'ThreadCore') }}</title>
+    @php($iconVersion = '20260504')
+    @if (request()->routeIs('admin.*'))
+        <link rel="icon" href="/favicon.ico?v={{ $iconVersion }}" sizes="any">
+        <link rel="apple-touch-icon" href="/icons/logo/apple-touch-icon.png">
+    @elseif (request()->routeIs('customer.*'))
+        <link rel="icon" href="/favicon.ico?v={{ $iconVersion }}" sizes="any">
+        <link rel="apple-touch-icon" href="/icons/logo/apple-touch-icon.png">
+    @else
+        <link rel="icon" href="/favicon.ico?v={{ $iconVersion }}" sizes="any">
+        <link rel="apple-touch-icon" href="/icons/logo/apple-touch-icon.png">
+    @endif
     <style>
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -40,6 +51,15 @@
         .shell { max-width: 1120px; margin: 0 auto; padding: 32px 20px; }
         .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
         .brand { display: flex; flex-direction: column; gap: 3px; }
+        .brand-lockup { align-items: center; display: inline-flex; gap: 12px; }
+        .brand-mark {
+            border-radius: 12px;
+            display: block;
+            flex: 0 0 auto;
+            height: 44px;
+            width: 44px;
+        }
+        .brand-copy { display: flex; flex-direction: column; gap: 3px; }
         .brand strong { font-size: 20px; letter-spacing: 0; }
         .brand span, .muted { color: var(--muted); font-size: 14px; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
@@ -169,6 +189,14 @@
             margin: 0 auto;
             max-width: 1120px;
             padding: 24px 20px;
+        }
+        .landing-wordmark-wrap { align-items: center; display: inline-flex; gap: 12px; }
+        .landing-wordmark-icon {
+            border-radius: 16px;
+            display: block;
+            flex: 0 0 auto;
+            height: 52px;
+            width: 52px;
         }
         .landing-wordmark {
             font-size: 20px;
@@ -318,6 +346,10 @@
         @media (max-width: 760px) {
             .landing-hero { padding-top: 42px; }
             .landing-nav { align-items: flex-start; flex-direction: column; }
+            .landing-wordmark-icon {
+                height: 44px;
+                width: 44px;
+            }
             .hero-main { grid-template-columns: 1fr; }
             .hero-actions .button { width: 100%; }
             .landing-band-grid { grid-template-columns: 1fr; }

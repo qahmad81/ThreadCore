@@ -3,6 +3,7 @@
 !.env.example
 vendor/
 node_modules/
+resources/branding/
 storage/logs/
 storage/*.key
 *.sqlite

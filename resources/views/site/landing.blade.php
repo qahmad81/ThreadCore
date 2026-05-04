@@ -1,7 +1,10 @@
 <x-layouts.app title="{{ $page?->title ?? 'ThreadCore' }}">
     <main class="landing">
         <nav class="landing-nav" aria-label="Primary navigation">
-            <strong class="landing-wordmark">ThreadCore</strong>
+            <div class="landing-wordmark-wrap">
+                <img class="landing-wordmark-icon" src="/icons/logo/apple-touch-icon.png" alt="ThreadCore public icon">
+                <strong class="landing-wordmark">ThreadCore</strong>
+            </div>
             <div class="actions">
                 @foreach ($publishedPages ?? [] as $navPage)
                     <a class="button" href="{{ route('site.page', $navPage->slug) }}">{{ $navPage->title }}</a>

@@ -19,6 +19,8 @@
   Human-facing project documentation and durable planning notes.
 - `public/`
   Laravel public entrypoint and public assets.
+- `public/icons/`
+  Surface-specific served icon assets for the public site, admin area, and customer workspace.
 - `resources/`
   Blade views and frontend resources.
 - `routes/`

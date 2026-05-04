@@ -4,7 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>ThreadCore</title>
+        <link rel="icon" href="/favicon.ico?v=20260504" sizes="any">
+        <link rel="apple-touch-icon" href="/icons/logo/apple-touch-icon.png">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -20,7 +22,11 @@
         @endif
     </head>
     <body class="bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18] flex p-6 lg:p-8 items-center lg:justify-center min-h-screen flex-col">
-        <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 not-has-[nav]:hidden">
+        <header class="w-full lg:max-w-4xl max-w-[335px] text-sm mb-6 flex items-center justify-between gap-4">
+            <a href="{{ url('/') }}" class="inline-flex items-center gap-3">
+                <img src="/icons/public.png" alt="ThreadCore public icon" class="w-10 h-10 rounded-xl">
+                <span class="font-medium">ThreadCore</span>
+            </a>
             @if (Route::has('login'))
                 <nav class="flex items-center justify-end gap-4">
                     @auth

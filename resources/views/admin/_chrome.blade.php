@@ -2,8 +2,13 @@
 
 <header class="topbar">
     <div class="brand">
-        <strong>{{ $title }}</strong>
-        <span>Operational control for ThreadCore</span>
+        <div class="brand-lockup">
+            <img class="brand-mark" src="/icons/logo/apple-touch-icon.png" alt="ThreadCore admin icon">
+            <div class="brand-copy">
+                <strong>{{ $title }}</strong>
+                <span>Operational control for ThreadCore</span>
+            </div>
+        </div>
         @include('admin._nav')
     </div>
 
