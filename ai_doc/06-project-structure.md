@@ -114,7 +114,7 @@
 - `app/Services/Ai/`
   Provider clients and normalized AI responses, including the generic OpenAI-compatible client plus Anthropic, Google, LM Studio, vLLM, and Ollama adapters.
 - `app/Services/Gateway/`
-  Provider resolution, history building, command parsing, compaction, limits, and token estimation.
+  Provider resolution, history building, command parsing, compaction, limits, and token estimation. Open-thread route fallback now resumes from the latest successful assistant-message metadata, or the latest successful model gateway log for legacy conversations, before using the thread-level route.
 - `app/Services/Gateway/ThreadMarkdownExporter.php`
   Shared Markdown rendering for admin and customer thread exports.
 - `database/seeders/DatabaseSeeder.php`

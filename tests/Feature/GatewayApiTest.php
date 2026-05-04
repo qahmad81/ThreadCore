@@ -130,6 +130,78 @@ class GatewayApiTest extends TestCase
         $this->assertNull($fresh->compacted_at);
     }
 
+    public function test_dayend_uses_family_compaction_route_even_when_overrides_are_sent(): void
+    {
+        $this->seed();
+        [$plainToken] = $this->createApiKey();
+
+        $account = \App\Models\CustomerAccount::query()->firstOrFail();
+        $family = \App\Models\FamilyAgent::query()->where('number', 'default')->firstOrFail();
+
+        $otherProvider = \App\Models\Provider::query()->firstOrCreate(
+            ['slug' => 'novita'],
+            [
+                'name' => 'Novita',
+                'driver' => 'openai',
+                'base_url' => 'https://novita.example/v1',
+                'api_key_env' => 'sk-novita-direct-token',
+                'is_enabled' => true,
+            ],
+        );
+        $otherProvider->forceFill([
+            'driver' => 'openai',
+            'base_url' => 'https://novita.example/v1',
+            'api_key_env' => 'sk-novita-direct-token',
+            'is_enabled' => true,
+        ])->save();
+        $otherProvider->models()->updateOrCreate(
+            ['model_key' => 'not-dayend-route'],
+            [
+                'name' => 'Not Dayend Route',
+                'is_enabled' => true,
+            ],
+        );
+
+        Http::fake([
+            'openrouter.ai/*' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => 'Family route memory'], 'finish_reason' => 'stop'],
+                ],
+                'usage' => ['prompt_tokens' => 12, 'completion_tokens' => 3],
+            ]),
+            'novita.example/*' => Http::response([], 404),
+        ]);
+
+        $thread = Thread::query()->create([
+            'public_id' => (string) Str::uuid(),
+            'customer_account_id' => $account->id,
+            'api_key_id' => $account->apiKeys()->firstOrFail()->id,
+            'family_agent_id' => $family->id,
+            'provider_id' => $otherProvider->id,
+            'provider_model_id' => $family->default_provider_model_id,
+            'title' => 'Dayend family route',
+            'max_context_tokens' => $family->max_context_tokens,
+        ]);
+
+        $thread->messages()->create(['role' => 'user', 'content' => 'first raw']);
+        $thread->messages()->create(['role' => 'assistant', 'content' => 'first reply']);
+
+        $this->withToken($plainToken)->postJson("/api/v1/threads/{$thread->public_id}/messages", [
+            'content' => '/dayend close day',
+            'provider' => 'novita',
+            'model' => 'not-dayend-route',
+        ])->assertOk()
+            ->assertJsonPath('compaction.triggered', true);
+
+        $memory = $thread->fresh()->messages()->where('is_memory', true)->firstOrFail();
+        $this->assertSame($family->default_provider_id, $memory->metadata['compaction_provider_id']);
+        $this->assertSame($family->default_provider_model_id, $memory->metadata['compaction_provider_model_id']);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), 'openrouter.ai');
+        });
+    }
+
     public function test_gateway_creates_thread_and_posts_message(): void
     {
         $this->seed();
@@ -172,6 +244,175 @@ class GatewayApiTest extends TestCase
         $this->assertSame(9, $firstAssistantMessage->input_tokens);
         $this->assertSame(4, $firstAssistantMessage->output_tokens);
         $this->assertSame('0.000000', $firstAssistantMessage->cost);
+    }
+
+    public function test_open_thread_without_overrides_reuses_the_latest_successful_message_route(): void
+    {
+        $this->seed();
+        [$plainToken] = $this->createApiKey();
+
+        $novitaProvider = \App\Models\Provider::query()->firstOrCreate(
+            ['slug' => 'novita'],
+            [
+                'name' => 'Novita',
+                'driver' => 'openai',
+                'base_url' => 'https://novita.example/v1',
+                'api_key_env' => 'sk-novita-direct-token',
+                'is_enabled' => true,
+            ],
+        );
+
+        $novitaProvider->forceFill([
+            'name' => 'Novita',
+            'driver' => 'openai',
+            'base_url' => 'https://novita.example/v1',
+            'api_key_env' => 'sk-novita-direct-token',
+            'is_enabled' => true,
+        ])->save();
+
+        $novitaProvider->models()->update(['is_default' => false]);
+
+        $novitaModel = $novitaProvider->models()->updateOrCreate(
+            ['model_key' => 'story-writer-gemma4:e2b'],
+            [
+                'name' => 'Story Writer Gemma',
+                'is_enabled' => true,
+                'is_default' => true,
+            ],
+        );
+
+        Http::fake([
+            'openrouter.ai/*' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => 'OpenRouter hello'], 'finish_reason' => 'stop'],
+                ],
+                'usage' => ['prompt_tokens' => 9, 'completion_tokens' => 4],
+            ]),
+            'novita.example/*' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => 'Novita reply'], 'finish_reason' => 'stop'],
+                ],
+                'usage' => ['prompt_tokens' => 8, 'completion_tokens' => 3],
+            ]),
+        ]);
+
+        $created = $this->withToken($plainToken)->postJson('/api/v1/threads', [
+            'family_agent' => 'default',
+            'content' => 'Hello',
+        ])->assertOk()
+            ->assertJsonPath('provider', 'openrouter')
+            ->json();
+
+        $threadId = $created['thread_id'];
+
+        $this->withToken($plainToken)->postJson("/api/v1/threads/{$threadId}/messages", [
+            'content' => 'Use novita now',
+            'provider' => 'novita',
+            'model' => 'story-writer-gemma4:e2b',
+        ])->assertOk()
+            ->assertJsonPath('provider', 'novita')
+            ->assertJsonPath('model', 'story-writer-gemma4:e2b');
+
+        $this->withToken($plainToken)->postJson("/api/v1/threads/{$threadId}/messages", [
+            'content' => 'Continue without overrides',
+        ])->assertOk()
+            ->assertJsonPath('provider', 'novita')
+            ->assertJsonPath('model', 'story-writer-gemma4:e2b')
+            ->assertJsonPath('response', 'Novita reply');
+
+        $thread = Thread::query()->where('public_id', $threadId)->firstOrFail();
+        $this->assertSame($novitaProvider->id, $thread->provider_id);
+        $this->assertSame($novitaModel->id, $thread->provider_model_id);
+
+        $latestAssistant = $thread->messages()->where('role', 'assistant')->latest('id')->firstOrFail();
+        $this->assertSame($novitaProvider->id, $latestAssistant->metadata['provider_id']);
+        $this->assertSame('novita', $latestAssistant->metadata['provider']);
+        $this->assertSame($novitaModel->id, $latestAssistant->metadata['provider_model_id']);
+        $this->assertSame('story-writer-gemma4:e2b', $latestAssistant->metadata['model']);
+    }
+
+    public function test_open_thread_without_overrides_can_reuse_legacy_log_route(): void
+    {
+        $this->seed();
+        [$plainToken] = $this->createApiKey();
+
+        $account = \App\Models\CustomerAccount::query()->firstOrFail();
+        $family = \App\Models\FamilyAgent::query()->where('number', 'default')->firstOrFail();
+        $openRouterProvider = \App\Models\Provider::query()->where('slug', 'openrouter')->firstOrFail();
+
+        $novitaProvider = \App\Models\Provider::query()->firstOrCreate(
+            ['slug' => 'novita'],
+            [
+                'name' => 'Novita',
+                'driver' => 'openai',
+                'base_url' => 'https://novita.example/v1',
+                'api_key_env' => 'sk-novita-direct-token',
+                'is_enabled' => true,
+            ],
+        );
+
+        $novitaProvider->forceFill([
+            'driver' => 'openai',
+            'base_url' => 'https://novita.example/v1',
+            'api_key_env' => 'sk-novita-direct-token',
+            'is_enabled' => true,
+        ])->save();
+
+        $novitaModel = $novitaProvider->models()->updateOrCreate(
+            ['model_key' => 'legacy-story-model'],
+            [
+                'name' => 'Legacy Story Model',
+                'is_enabled' => true,
+                'is_default' => true,
+            ],
+        );
+
+        $thread = Thread::query()->create([
+            'public_id' => (string) Str::uuid(),
+            'customer_account_id' => $account->id,
+            'api_key_id' => $account->apiKeys()->firstOrFail()->id,
+            'family_agent_id' => $family->id,
+            'provider_id' => $openRouterProvider->id,
+            'provider_model_id' => $family->default_provider_model_id,
+            'title' => 'Legacy route thread',
+            'max_context_tokens' => $family->max_context_tokens,
+        ]);
+
+        $thread->messages()->create(['role' => 'user', 'content' => 'old user']);
+        $thread->messages()->create(['role' => 'assistant', 'content' => 'old assistant']);
+
+        \App\Models\GatewayRequestLog::query()->create([
+            'customer_account_id' => $account->id,
+            'api_key_id' => $account->apiKeys()->firstOrFail()->id,
+            'thread_id' => $thread->id,
+            'provider_id' => $novitaProvider->id,
+            'provider_model_id' => $novitaModel->id,
+            'status' => 'ok',
+            'input_tokens' => 8,
+            'output_tokens' => 3,
+            'request_payload' => ['command' => null, 'content' => 'legacy successful turn'],
+            'response_metadata' => [
+                'finish_reason' => 'stop',
+                'normalized_usage' => ['prompt_tokens' => 8, 'completion_tokens' => 3],
+            ],
+        ]);
+
+        Http::fake([
+            'novita.example/*' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => 'Novita legacy route reply'], 'finish_reason' => 'stop'],
+                ],
+                'usage' => ['prompt_tokens' => 8, 'completion_tokens' => 3],
+            ]),
+            'openrouter.ai/*' => Http::response([], 404),
+        ]);
+
+        $this->withToken($plainToken)->postJson("/api/v1/threads/{$thread->public_id}/messages", [
+            'content' => 'Continue without overrides',
+        ])->assertOk()
+            ->assertJsonPath('provider', 'novita')
+            ->assertJsonPath('model', 'legacy-story-model')
+            ->assertJsonPath('response', 'Novita legacy route reply');
     }
 
     public function test_gateway_commands_skip_whisper_dayend_and_forget(): void

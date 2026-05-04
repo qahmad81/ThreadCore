@@ -53,7 +53,7 @@ class GatewayThreadController extends Controller
         $this->limits->assertCanUse($account, $command === 'dayend' ? 0 : $inputEstimate);
 
         if ($command === 'dayend') {
-            $route = $this->resolver->resolve($family, null, $data);
+            $route = $this->resolver->resolve($family);
             $this->limits->recordUsage($account, 0);
 
             GatewayRequestLog::query()->create([
@@ -135,7 +135,7 @@ class GatewayThreadController extends Controller
 
         if ($command === 'dayend') {
             try {
-                $compaction = $this->compaction->compact($thread->fresh(), true, $data);
+                $compaction = $this->compaction->compact($thread->fresh(), true);
             } catch (Throwable $exception) {
                 GatewayRequestLog::query()->create([
                     'customer_account_id' => $account->id,
@@ -256,22 +256,31 @@ class GatewayThreadController extends Controller
                     'is_forgotten' => true,
                 ]);
 
-                $thread->messages()->create([
-                    'role' => 'assistant',
-                    'content' => $response->content,
-                    'input_tokens' => $inputTokens,
-                    'output_tokens' => $outputTokens,
-                    'cost' => $response->cost,
-                    'is_forgotten' => true,
-                    'metadata' => [
-                        'finish_reason' => $response->finishReason,
-                        'usage' => $response->usage,
-                    ],
-                ]);
+            $thread->messages()->create([
+                'role' => 'assistant',
+                'content' => $response->content,
+                'input_tokens' => $inputTokens,
+                'output_tokens' => $outputTokens,
+                'cost' => $response->cost,
+                'is_forgotten' => true,
+                'metadata' => [
+                    'provider_id' => $route->provider->id,
+                    'provider' => $route->provider->slug,
+                    'provider_model_id' => $route->model->id,
+                    'model' => $route->model->model_key,
+                    'finish_reason' => $response->finishReason,
+                    'usage' => $response->usage,
+                ],
+            ]);
 
-                $thread->increment('input_tokens', $inputTokens);
-                $thread->increment('output_tokens', $outputTokens);
-                $this->limits->recordUsage($account, $inputTokens + $outputTokens);
+            $thread->forceFill([
+                'provider_id' => $route->provider->id,
+                'provider_model_id' => $route->model->id,
+            ])->save();
+
+            $thread->increment('input_tokens', $inputTokens);
+            $thread->increment('output_tokens', $outputTokens);
+            $this->limits->recordUsage($account, $inputTokens + $outputTokens);
 
                 $compaction = new CompactionResult();
                 $compactionError = null;
@@ -358,10 +367,19 @@ class GatewayThreadController extends Controller
                 'output_tokens' => $outputTokens,
                 'cost' => $response->cost,
                 'metadata' => [
+                    'provider_id' => $route->provider->id,
+                    'provider' => $route->provider->slug,
+                    'provider_model_id' => $route->model->id,
+                    'model' => $route->model->model_key,
                     'finish_reason' => $response->finishReason,
                     'usage' => $response->usage,
                 ],
             ]);
+
+            $thread->forceFill([
+                'provider_id' => $route->provider->id,
+                'provider_model_id' => $route->model->id,
+            ])->save();
 
             $thread->increment('input_tokens', $inputTokens);
             $thread->increment('output_tokens', $outputTokens);

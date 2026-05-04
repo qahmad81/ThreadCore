@@ -3,8 +3,10 @@
 namespace App\Services\Gateway;
 
 use App\Models\FamilyAgent;
+use App\Models\GatewayRequestLog;
 use App\Models\Provider;
 use App\Models\ProviderModel;
+use App\Models\ThreadMessage;
 use App\Models\Thread;
 use RuntimeException;
 
@@ -14,9 +16,19 @@ class ProviderResolver
     {
         $provider = null;
         $model = null;
+        $lastMessageRoute = $thread ? $this->lastMessageRoute($thread) : null;
+        $lastLogRoute = $thread && ! $lastMessageRoute ? $this->lastGatewayLogRoute($thread) : null;
 
         if (! empty($overrides['provider'])) {
             $provider = Provider::query()->where('slug', $overrides['provider'])->where('is_enabled', true)->first();
+        }
+
+        if ($lastMessageRoute?->provider) {
+            $provider ??= $lastMessageRoute->provider;
+        }
+
+        if ($lastLogRoute?->provider) {
+            $provider ??= $lastLogRoute->provider;
         }
 
         if ($thread?->provider_id) {
@@ -40,7 +52,15 @@ class ProviderResolver
                 ->first();
         }
 
-        if ($thread?->provider_model_id && $thread->provider_model?->provider_id === $provider->id) {
+        if ($lastMessageRoute?->model && $lastMessageRoute->model->provider_id === $provider->id) {
+            $model ??= $lastMessageRoute->model;
+        }
+
+        if ($lastLogRoute?->model && $lastLogRoute->model->provider_id === $provider->id) {
+            $model ??= $lastLogRoute->model;
+        }
+
+        if ($thread?->provider_model_id && $thread->providerModel?->provider_id === $provider->id) {
             $model ??= $thread->providerModel;
         }
 
@@ -57,6 +77,86 @@ class ProviderResolver
 
         if (! $model) {
             throw new RuntimeException("Provider [{$provider->slug}] has no enabled model.");
+        }
+
+        return new ResolvedRoute($provider, $model);
+    }
+
+    private function lastMessageRoute(Thread $thread): ?ResolvedRoute
+    {
+        $message = $thread->messages()
+            ->where('is_forgotten', false)
+            ->latest('id')
+            ->get()
+            ->first(function (ThreadMessage $message): bool {
+                return filled($message->metadata['provider_id'] ?? null)
+                    && filled($message->metadata['provider_model_id'] ?? null);
+            });
+
+        if (! $message) {
+            return null;
+        }
+
+        $provider = Provider::query()
+            ->whereKey($message->metadata['provider_id'])
+            ->where('is_enabled', true)
+            ->first();
+
+        if (! $provider) {
+            return null;
+        }
+
+        $model = ProviderModel::query()
+            ->whereKey($message->metadata['provider_model_id'])
+            ->where('provider_id', $provider->id)
+            ->where('is_enabled', true)
+            ->first();
+
+        if (! $model) {
+            return null;
+        }
+
+        return new ResolvedRoute($provider, $model);
+    }
+
+    private function lastGatewayLogRoute(Thread $thread): ?ResolvedRoute
+    {
+        $log = GatewayRequestLog::query()
+            ->where('thread_id', $thread->id)
+            ->where('status', 'ok')
+            ->latest('id')
+            ->take(20)
+            ->get()
+            ->first(function (GatewayRequestLog $log): bool {
+                return filled($log->provider_id)
+                    && filled($log->provider_model_id)
+                    && (
+                        filled($log->response_metadata['normalized_usage'] ?? null)
+                        || filled($log->response_metadata['finish_reason'] ?? null)
+                    );
+            });
+
+        if (! $log) {
+            return null;
+        }
+
+        $provider = Provider::query()
+            ->whereKey($log->provider_id)
+            ->where('is_enabled', true)
+            ->first();
+
+        if (! $provider) {
+            return null;
+        }
+
+        $model = ProviderModel::query()
+            ->whereKey($log->provider_model_id)
+            ->where('provider_id', $provider->id)
+            ->where('is_enabled', true)
+            ->first();
+
+        if (! $model) {
+            return null;
         }
 
         return new ResolvedRoute($provider, $model);
