@@ -1,5 +1,7 @@
 # ThreadCore
 
+![Tests Passing](https://img.shields.io/badge/tests-passing-brightgreen)
+
 ThreadCore is a Laravel-based microsaas for AI thread orchestration, provider routing, customer API access, and long-context memory management.
 
 It gives teams one gateway for creating AI conversations, routing them through configurable provider/model resources, tracking usage and cost, compacting long-running context into memory, and exposing a customer-facing API key workflow.
